@@ -10,6 +10,12 @@ This is a C++ MOBA project using:
 
 ---
 
+## Next focus
+
+- Get server/client to send and recieve custom packets that can easily be modified for game purposes.
+- Begin implementing game logic!
+
+
 ## Intended Classes
 
 - NetClient
@@ -18,4 +24,6 @@ This is a C++ MOBA project using:
 - GameClient - ActualGame (Game, NetClient)
 - Game - Core game logic with optional audio and rendering if part of server.
 - Server - Game server (Game, NetServer)
+
+---
 
