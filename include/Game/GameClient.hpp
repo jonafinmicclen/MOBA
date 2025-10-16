@@ -2,4 +2,6 @@
 #pragma once
 
 
-class 
+class GameClient {
+
+};

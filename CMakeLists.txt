@@ -66,7 +66,7 @@ foreach(main_file ${MAIN_FILES})
 
     add_executable(${name} ${main_file} ${SHARED_SOURCES} ${ALL_HPP_FILES})
 
-    # ✅ Apply include directories to executables too
+    # Apply include directories to executables too
     target_include_directories(${name} PRIVATE ${PROJECT_INCLUDES})
 
     target_link_libraries(${name}
