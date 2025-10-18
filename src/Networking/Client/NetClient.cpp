@@ -6,11 +6,7 @@ NetClient::NetClient(const char* server_add, int port) {
     server_address = server_add;
     server_port = port;
 
-    client = enet_host_create (NULL /* create a client host */,
-            1 /* only allow 1 outgoing connection */,
-            2 /* allow up 2 channels to be used, 0 and 1 */,
-            0 /* assume any amount of incoming bandwidth */,
-            0 /* assume any amount of outgoing bandwidth */);
+    client = enet_host_create (NULL, 1, NetConstants::NUM_CHANNELS, 0, 0);
  
     if (!client) {
         enet_deinitialize();
@@ -30,25 +26,19 @@ void NetClient::pollEvents() {
         switch (event.type)
         {
         case ENET_EVENT_TYPE_CONNECT:
-            printf("Connection attempted to client which should have been already connected.");
+            std::cout<<"Connection attempted to client which should have been already connected.";
             break;
     
         case ENET_EVENT_TYPE_RECEIVE:
-            printf ("A packet of length %u containing %s was received from %s on channel %u.\n",
-                    event.packet -> dataLength,
-                    event.packet -> data,
-                    event.peer -> data,
-                    event.channelID);
-    
-            /* Clean up the packet now that we're done using it. */
+
+            if (event.packet) {
+            }   
+
             enet_packet_destroy (event.packet);
-            
             break;
         
         case ENET_EVENT_TYPE_DISCONNECT:
-            printf ("%s disconnected.\n", event.peer -> data);
-    
-            /* Reset the peer's client information. */
+            std::cout<<std::format("{} disconected.\n", event.peer->data);
     
             event.peer -> data = NULL;
         }
@@ -56,48 +46,44 @@ void NetClient::pollEvents() {
 }
 
 void NetClient::connectServer() {
-    /* Connect to some.server.net:1234. */
     enet_address_set_host (& address, server_address);
     address.port = server_port;
     
-    /* Initiate the connection, allocating the two channels 0 and 1. */
     peer = enet_host_connect (client, & address, 2, 0);    
     
-    if (peer == NULL)
-    {
-    fprintf (stderr, 
-                "No available peers for initiating an ENet connection.\n");
-    exit (EXIT_FAILURE);
+    if (peer == nullptr) {
+        std::cout<<"No available peers for initiating an ENet connection.\n";
+        exit (EXIT_FAILURE);
     }
     
-    /* Wait up to 5 seconds for the connection attempt to succeed. */
     if (enet_host_service (client, & event, 10000) > 0 &&
         event.type == ENET_EVENT_TYPE_CONNECT)
     {
-        puts ("Connection to some.server.net:1234 succeeded.");
+        std::cout<<std::format("Connection to server @ {}:{} succeeded.\n", server_address, server_port);
     }
     else
     {
         enet_peer_reset (peer);
-        puts ("Connection to server failed.");
+        std::cout<<std::format("Connection to server @ {}:{} failed.\n", server_address, server_port);
 
     }
 }
 
-void NetClient::sendPackets() {
-    // Prepare the message using std::string
-    std::string message = "client packet";
+void NetClient::sendPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag) {
 
-    // Create a reliable ENet packet
     ENetPacket* packet = enet_packet_create(
-        message.c_str(),              // pointer to the data
-        message.size() + 1,           // include null terminator
-        ENET_PACKET_FLAG_RELIABLE     // reliable delivery
+        packet_content.data(),
+        packet_content.size(),
+        flag
     );
 
-    // Send the packet over channel 0
-    enet_peer_send(peer, 0, packet);
-
-    // Flush immediately if needed
+    enet_peer_send (peer, channel, packet);
     enet_host_flush(client);
+}
+
+std::unique_ptr<PacketBase> NetClient::popQueue() {
+    if (packet_queue.empty()) return nullptr;
+    std::unique_ptr<PacketBase> packet = std::move(packet_queue.front());
+    packet_queue.pop();
+    return packet;
 }

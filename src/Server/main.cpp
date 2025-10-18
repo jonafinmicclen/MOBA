@@ -12,7 +12,7 @@ int main() {
         while (true) {
             server.pollEvents();
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            server.sendPackets();
+            // server.sendPackets();
         }
     });
 

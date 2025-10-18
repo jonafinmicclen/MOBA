@@ -3,26 +3,37 @@
 
 #include <enet/enet.h>
 #include <iostream>
+#include <format>
+#include <vector>
+#include "Networking/NetworkConstants.hpp"
+#include <queue>
+#include <memory>
+
+#include "Networking/Packets/PacketBase.hpp"
 
 
 class NetClient {
 public:
 
-NetClient(const char* server_add, int port);
-~NetClient();
+    NetClient(const char* server_add, int port);
+    ~NetClient();
 
-void pollEvents();
-void connectServer();
-void sendPackets();
+    void pollEvents();
+    void connectServer();
+    void sendPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
+
+    std::unique_ptr<PacketBase> popQueue();
 
 
 private:
 
-const char* server_address;
-int server_port;
+    std::queue<std::unique_ptr<PacketBase>> packet_queue;
 
-ENetHost* client;
-ENetAddress address;
-ENetPeer *peer;
-ENetEvent event;
+    const char* server_address;
+    int server_port;
+
+    ENetHost* client;
+    ENetAddress address;
+    ENetPeer *peer;
+    ENetEvent event;
 };
