@@ -48,7 +48,7 @@ void NetServer::pollEvents() {
             break;
         
         case ENET_EVENT_TYPE_DISCONNECT:
-            printf ("%s disconnected.\n", event.peer -> data);
+            std::cout<<std::format("{} disconected.\n", event.peer->data);
             event.peer -> data = nullptr;
         }
     }

@@ -1,14 +1,16 @@
 // NetServer.hpp
 #pragma once
 
+#include "Networking/NetworkConstants.hpp"
+#include "Networking/Packets/PacketBase.hpp"
+
 #include <enet/enet.h>
+
+#include <format>
 #include <iostream>
 #include <vector>
 #include <memory>
 #include <queue>
-
-#include "Networking/NetworkConstants.hpp"
-#include "Networking/Packets/PacketBase.hpp"
 
 
 class NetServer {
@@ -21,7 +23,7 @@ class NetServer {
     void sendPackets(const std::vector<uint8_t>& packet_content, ENetPeer* target_peer, const enet_uint8 channel, ENetPacketFlag const flag = ENET_PACKET_FLAG_RELIABLE);
     void broadcastPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
 
-    
+
     std::unique_ptr<PacketBase> popQueue();
 
 

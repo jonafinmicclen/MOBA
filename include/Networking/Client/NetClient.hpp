@@ -1,15 +1,16 @@
 // NetClient.hpp
 #pragma once
 
+#include "Networking/NetworkConstants.hpp"
+#include "Networking/Packets/PacketBase.hpp"
+
 #include <enet/enet.h>
+
 #include <iostream>
 #include <format>
 #include <vector>
-#include "Networking/NetworkConstants.hpp"
 #include <queue>
 #include <memory>
-
-#include "Networking/Packets/PacketBase.hpp"
 
 
 class NetClient {
