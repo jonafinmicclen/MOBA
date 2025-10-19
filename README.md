@@ -12,7 +12,7 @@ This is a C++ MOBA project using:
 
 ## Next focus
 
-- [x] ~~Get server/client to send and recieve custom packets that can easily be modified for game purposes. ~~
+- [x] ~~~~Get server/client to send and recieve custom packets that can easily be modified for game purposes. ~~~
 - [ ] Begin implementing game logic!
 
 ---
