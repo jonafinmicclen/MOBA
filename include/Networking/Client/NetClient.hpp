@@ -4,6 +4,8 @@
 #include "Networking/NetworkConstants.hpp"
 #include "Networking/Packets/PacketBase.hpp"
 
+#include "Networking/Packets/PacketFactory.hpp"
+
 #include <enet/enet.h>
 
 #include <iostream>
@@ -23,12 +25,12 @@ public:
     void connectServer();
     void sendPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
 
-    std::unique_ptr<PacketBase> popQueue();
+    PacketBase* popQueue();
 
 
 private:
 
-    std::queue<std::unique_ptr<PacketBase>> packet_queue;
+    std::queue<PacketBase*> packet_queue;
 
     const char* server_address;
     int server_port;

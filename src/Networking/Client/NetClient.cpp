@@ -32,6 +32,8 @@ void NetClient::pollEvents() {
         case ENET_EVENT_TYPE_RECEIVE:
 
             if (event.packet) {
+                auto new_packet = PacketFactory::packetFromBytes(event.packet->data, event.packet->dataLength);
+                packet_queue.push(new_packet);
             }   
 
             enet_packet_destroy (event.packet);
@@ -81,9 +83,9 @@ void NetClient::sendPackets(const std::vector<uint8_t>& packet_content, const en
     enet_host_flush(client);
 }
 
-std::unique_ptr<PacketBase> NetClient::popQueue() {
+PacketBase* NetClient::popQueue() {
     if (packet_queue.empty()) return nullptr;
-    std::unique_ptr<PacketBase> packet = std::move(packet_queue.front());
+    PacketBase* packet = std::move(packet_queue.front());
     packet_queue.pop();
     return packet;
 }

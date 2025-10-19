@@ -2,7 +2,7 @@
 #pragma once
 
 #include "Networking/Packets/PacketBase.hpp"
-
+#include "Networking/Packets/PacketTypes.hpp"
 
 class PlayerInputPacket : public PacketBase {
 public:

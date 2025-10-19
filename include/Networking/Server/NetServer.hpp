@@ -4,6 +4,8 @@
 #include "Networking/NetworkConstants.hpp"
 #include "Networking/Packets/PacketBase.hpp"
 
+#include "Networking/Packets/PacketFactory.hpp"
+
 #include <enet/enet.h>
 
 #include <format>
@@ -24,14 +26,14 @@ class NetServer {
     void broadcastPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
 
 
-    std::unique_ptr<PacketBase> popQueue();
+    PacketBase* popQueue();
 
 
     private:
 
     std::vector<ENetPeer*> connected_clients;
     uint8_t next_client_id = 0;
-    std::queue<std::unique_ptr<PacketBase>> packet_queue;
+    std::queue<PacketBase*> packet_queue;
 
     ENetAddress address;
     ENetHost* server;
