@@ -15,6 +15,8 @@ This is a C++ MOBA project using:
 - Get server/client to send and recieve custom packets that can easily be modified for game purposes.
 - Begin implementing game logic!
 
+---
+
 
 ## Intended Classes
 
