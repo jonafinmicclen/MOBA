@@ -13,16 +13,12 @@ find_package(SDL2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(GLEW REQUIRED)
 
-# Box2D via pkg-config
-pkg_check_modules(BOX2D REQUIRED box2d)
-
 # --- Collect include directories ---
 set(PROJECT_INCLUDES
     /usr/include                 # ENet system include
     ${OPENGL_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
-    ${BOX2D_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include
 )
 
@@ -73,7 +69,6 @@ foreach(main_file ${MAIN_FILES})
         ServerLib
         ${OPENGL_LIBRARIES}
         ${SDL2_LIBRARIES}
-        ${BOX2D_LIBRARIES}
         enet
         ${GLEW_LIBRARIES}
     )

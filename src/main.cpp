@@ -1,6 +1,5 @@
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
-#include <box2d/box2d.h>
 #include <enet/enet.h>
 #include <iostream>
     
@@ -27,10 +26,6 @@ int main(int argc, char* argv[]) {
     }
 
     glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
-
-    // --- Box2D World ---
-    b2Vec2 gravity(0.0f, -9.8f);
-    b2World world(gravity);
 
     // --- ENet Initialization ---
     if (enet_initialize() != 0) {

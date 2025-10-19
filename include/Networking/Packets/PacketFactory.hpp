@@ -19,7 +19,7 @@ namespace PacketFactory {
 
     inline PacketBase* packetFromBytes(const uint8_t* bytes, const size_t size) {
         const PacketType type = static_cast<PacketType>(bytes[0]);
-        PacketBase* packet;
+        PacketBase* packet = nullptr;
         switch (type) {
             //case PacketType::PlayerInput:
             //    packet = new PlayerInputPacket;

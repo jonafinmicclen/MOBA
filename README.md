@@ -5,7 +5,6 @@ This is a C++ MOBA project using:
 - OpenGL
 - SDL2
 - GLEW
-- Box2D
 - ENet networking
 
 ---

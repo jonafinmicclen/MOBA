@@ -11,3 +11,5 @@
 # IDE files (optional)
 *.vscode/
 *.idea/
+
+/rebuild.sh
