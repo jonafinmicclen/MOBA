@@ -16,7 +16,7 @@ int main() {
         auto packet = TestPacket("Packet of balls");
         while (true) {
             server.pollEvents();
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             server.broadcastPackets(packet.serialize(), 0);
         }
     });
@@ -29,13 +29,15 @@ int main() {
     // client loop
     while (true) {
         client.pollEvents();
-        PacketBase* recieved_packet = client.popQueue();
-        if (TestPacket* test = dynamic_cast<TestPacket*>(recieved_packet)) {
-            std::cout<<test->packet_string;
-        } else {
-            std::cout<<"tf packet";
+
+        if (PacketBase* recieved_packet = client.popQueue()) {
+            if (TestPacket* test = dynamic_cast<TestPacket*>(recieved_packet)) {
+                std::cout<<test->packet_string<<std::endl;
+            } else {
+                std::cout<<"tf packet\n";
+            }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     server_thread.join();
