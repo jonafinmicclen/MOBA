@@ -21,7 +21,7 @@ NetClient::~NetClient() {
 }
 
 void NetClient::pollEvents() {
-    if (enet_host_service (client, &event, 0) > 0)
+    while (enet_host_service (client, &event, 0) > 0)
     {
         switch (event.type)
         {
@@ -31,12 +31,7 @@ void NetClient::pollEvents() {
     
         case ENET_EVENT_TYPE_RECEIVE:
 
-            if (event.packet) {
-                auto new_packet = PacketFactory::packetFromBytes(event.packet->data, event.packet->dataLength);
-                packet_queue.push(new_packet);
-            }   
-
-            enet_packet_destroy (event.packet);
+            handleIncomingPacket(event.packet);
             break;
         
         case ENET_EVENT_TYPE_DISCONNECT:
@@ -83,9 +78,16 @@ void NetClient::sendPackets(const std::vector<uint8_t>& packet_content, const en
     enet_host_flush(client);
 }
 
-PacketBase* NetClient::popQueue() {
+std::unique_ptr<PacketBase> NetClient::popQueue() {
     if (packet_queue.empty()) return nullptr;
-    PacketBase* packet = std::move(packet_queue.front());
+    std::unique_ptr<PacketBase> packet = std::move(packet_queue.front());
     packet_queue.pop();
     return packet;
+}
+
+void NetClient::handleIncomingPacket(const ENetPacket* packet) {
+    if (!packet) return;
+    auto new_packet = PacketFactory::packetFromBytes(packet->data, packet->dataLength);
+    packet_queue.push(std::move(new_packet));  
+    enet_packet_destroy (event.packet);
 }

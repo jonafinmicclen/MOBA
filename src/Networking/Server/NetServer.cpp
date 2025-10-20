@@ -43,7 +43,7 @@ void NetServer::pollEvents() {
 
             if (event.packet) {
                 auto new_packet = PacketFactory::packetFromBytes(event.packet->data, event.packet->dataLength);
-                packet_queue.push(new_packet);
+                packet_queue.push(std::move(new_packet));
             }   
 
             enet_packet_destroy (event.packet);
@@ -56,15 +56,24 @@ void NetServer::pollEvents() {
     }
 }
 
-void NetServer::broadcastPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag) {
+void NetServer::broadcastPackets(const std::unique_ptr<PacketBase>& packet, const enet_uint8 channel, const ENetPacketFlag flag) {
 
-    ENetPacket* packet = enet_packet_create(
+    std::cerr<< "[NetServer]: Serialized packet content size <= 1\n";
+
+    std::vector<uint8_t> packet_content = packet->serialize();
+
+    if (packet_content.size() <= 1) {
+        std::cerr<< "[NetServer]: Serialized packet content size <= 1\n";
+        return;
+    }
+
+    ENetPacket* net_packet = enet_packet_create(
         packet_content.data(),
         packet_content.size(),
         flag
     );
 
-    enet_host_broadcast(server, channel, packet);
+    enet_host_broadcast(server, channel, net_packet);
     enet_host_flush(server);
 }
 
@@ -84,9 +93,16 @@ void NetServer::initialiseClientConnection() {
     // Send client id to client connected.
 }
 
-PacketBase* NetServer::popQueue() {
+std::unique_ptr<PacketBase> NetServer::popQueue() {
     if (packet_queue.empty()) return nullptr;
-    PacketBase* packet = std::move(packet_queue.front());
+    std::unique_ptr<PacketBase> packet = std::move(packet_queue.front());
     packet_queue.pop();
     return packet;
+}
+
+void NetServer::handleIncomingPacket(ENetPacket* packet) {
+    if (!event.packet) return;
+    auto new_packet = PacketFactory::packetFromBytes(event.packet->data, event.packet->dataLength);
+    packet_queue.push(std::move(new_packet));  
+    enet_packet_destroy (event.packet);
 }

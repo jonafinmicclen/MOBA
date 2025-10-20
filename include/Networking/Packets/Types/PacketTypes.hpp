@@ -3,6 +3,6 @@
 #include <cstdint>
 
 enum class PacketType : uint8_t {
-    PlayerInput = 0,
-    TestPacket = 1
+    CastAbility = 0,
+    MoveCharacter = 1
 };

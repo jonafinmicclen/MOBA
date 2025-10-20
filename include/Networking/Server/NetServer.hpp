@@ -23,23 +23,25 @@ class NetServer {
 
     void pollEvents();
     void sendPackets(const std::vector<uint8_t>& packet_content, ENetPeer* target_peer, const enet_uint8 channel, ENetPacketFlag const flag = ENET_PACKET_FLAG_RELIABLE);
-    void broadcastPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
+    void broadcastPackets(const std::unique_ptr<PacketBase>& packet, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
 
 
-    PacketBase* popQueue();
+    std::unique_ptr<PacketBase> popQueue();
 
 
     private:
 
+    void handleIncomingPacket(ENetPacket* packet);
+    void initialiseClientConnection();
+
     std::vector<ENetPeer*> connected_clients;
     uint8_t next_client_id = 0;
-    std::queue<PacketBase*> packet_queue;
+    std::queue<std::unique_ptr<PacketBase>> packet_queue;
 
     ENetAddress address;
     ENetHost* server;
     ENetEvent event;
 
     const int max_clients;
-
-    void initialiseClientConnection();
+    
 };

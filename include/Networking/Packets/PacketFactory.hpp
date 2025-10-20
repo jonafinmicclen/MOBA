@@ -1,35 +1,35 @@
 #pragma once
 
-#include "Networking/Packets/PacketBase.hpp"
+#include "Networking/Packets/Packets.hpp"
 
-// All subpackets
-#include "Networking/Packets/TestPacket.hpp"
-//#include "Networking/Packets/PlayerInputPacket.hpp"
-
+#include <iostream>
 #include <vector>
+#include <memory>
 
 
 namespace PacketFactory {
 
     template<typename pT>
-    inline void deserialise_packet(PacketBase** packet, const uint8_t* bytes, const size_t size) {
-        *packet = new pT;
-        (*packet)->deserialize(bytes + 1, size - 1);
+    static std::unique_ptr<PacketBase> deserialise_packet(const uint8_t* bytes, size_t size) {
+        auto packet = std::make_unique<pT>();
+        packet->deserialize(bytes , size );
+        return packet;
     }
 
-    inline PacketBase* packetFromBytes(const uint8_t* bytes, const size_t size) {
-        const PacketType type = static_cast<PacketType>(bytes[0]);
-        PacketBase* packet = nullptr;
-        switch (type) {
-            //case PacketType::PlayerInput:
-            //    packet = new PlayerInputPacket;
-            //    packet->deserialize(bytes, size);
-            //    break;
-            case PacketType::TestPacket:
-                deserialise_packet<TestPacket>(&packet, bytes, size);
-                break;
+    inline std::unique_ptr<PacketBase> packetFromBytes(const uint8_t* bytes, const size_t size) {
+        if (size <= 1) {
+            std::cerr<<"Attempted to construct packet but it was <= 1.\n";
+            return nullptr;
         }
-        return packet;
+        const PacketType type = static_cast<PacketType>(bytes[0]);
+        switch (type) {
+            case PacketType::CastAbility:
+                return deserialise_packet<CastAbilityPacket>(bytes, size);
+            case PacketType::MoveCharacter:
+                return deserialise_packet<MoveCharacterPacket>(bytes, size);
+        }
+        std::cerr<<"Attempted to construct unrecognised packet type. Type= " << static_cast<int>(bytes[0]);
+        return nullptr;
     }
 
 };

@@ -8,6 +8,5 @@
 class IInputListener {
     public:
     virtual ~IInputListener() = default;
-
     virtual void OnInputEvent(InputEvent& event) = 0;
 };
