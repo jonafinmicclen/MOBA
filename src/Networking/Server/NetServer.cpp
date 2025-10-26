@@ -56,9 +56,7 @@ void NetServer::pollEvents() {
     }
 }
 
-void NetServer::broadcastPackets(const std::unique_ptr<PacketBase>& packet, const enet_uint8 channel, const ENetPacketFlag flag) {
-
-    std::cerr<< "[NetServer]: Serialized packet content size <= 1\n";
+void NetServer::broadcastPackets(const PacketBase* packet, const enet_uint8 channel, const ENetPacketFlag flag) {
 
     std::vector<uint8_t> packet_content = packet->serialize();
 

@@ -11,10 +11,12 @@
 #include <iostream>
 
 int main() {
+    std::cout<<"WTat\n\n";
     NetServer server(2, ENET_HOST_ANY, 1234);
 
     // Server loop in a separate thread
     std::thread server_thread([&server]() {
+        std::cout<<"Herllo from server thread";
         EventPacketConverter converter;
 
         // Original event
@@ -22,15 +24,32 @@ int main() {
         event.id = CharacterID{12};
         event.pos = WorldSpacePos{10, 9};
 
+        std::cout<<"Hello?"<<std::endl;
+
+        auto packetP  = converter.eventToPacket(&event);
+        packetP->event = &event;
+        std::cout<<"Pre cerreal";
+
+        packetP->serialize();
+
+        std::cout<<"Pre cast";
+
+        auto packetPtr = dynamic_cast<MoveCharacterPacket*>(packetP);
+
+        std::cout<<event.id.id;
+
+
+        //packetP->serialize();
+        if(packetPtr->event->GetType() == EventType::MoveCharacter) std::cout<<"correctype  ";
+        if (!packetPtr) std::cout<<"eventtopacket failed";
+    
+
+
         while (true) {
             server.pollEvents();
 
-            // Make a fresh unique_ptr for every broadcast
-            std::unique_ptr<BaseEvent> eventPtr = std::make_unique<MoveCharacterEvent>(event);
-            auto packet = converter.eventToPacket(std::move(eventPtr));
-
-            if (packet) {
-                server.broadcastPackets(packet, 0);
+            if (packetPtr) {
+                server.broadcastPackets(packetP, 0);
             } else std::cout<<"Packet was empty";
 
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -49,10 +68,10 @@ int main() {
         client.pollEvents();
 
         if (auto packet = client.popQueue()) {
-            std::unique_ptr<BaseEvent> event = converter.packetToEvent(std::move(packet));
+            BaseEvent* event = converter.packetToEvent(packet.get());
 
             if (event && event->GetType() == EventType::MoveCharacter) {
-                auto moveEvent = dynamic_cast<MoveCharacterEvent*>(event.get());
+                auto moveEvent = dynamic_cast<MoveCharacterEvent*>(event);
 
                 if (moveEvent) {
                     std::cout << "ID: " << moveEvent->id.id

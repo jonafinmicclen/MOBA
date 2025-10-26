@@ -13,15 +13,13 @@ class MoveCharacterPacket : public PacketBase {
 public:
 
     PacketType getType() const override { return PacketType::MoveCharacter; }
-    std::unique_ptr<MoveCharacterEvent> event;
+    MoveCharacterEvent* event;
 
     
     std::vector<uint8_t> serialize() const override {
         if (!event) {
             throw std::runtime_error("MoveCharacterPacket: event is nullptr, cannot serialize");
         }
-
-        std::cout<<"attem,ping"<<std::endl;
 
         std::vector<uint8_t> data;
 
@@ -45,12 +43,14 @@ public:
 
     void deserialize(const uint8_t* data, size_t size) override {
         if (size < sizeof(int) * 3) {
-            throw std::runtime_error("MoveCharacterPacket: Not enough data to deserialize");
+            throw std::runtime_error("MoveCharacterPacket: Not enough data to deserialize.\n");
         }
 
-        if (!event) {
-            event = std::make_unique<MoveCharacterEvent>();
+        if (event) { 
+            delete event;
+            std::cerr<<"MoveCharacterPacket: Deserialising into already allocated event.\n";
         }
+        event = new MoveCharacterEvent;
 
         size_t offset = 0;
 

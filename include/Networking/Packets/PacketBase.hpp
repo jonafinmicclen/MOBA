@@ -15,5 +15,4 @@ public:
     virtual PacketType getType() const = 0;
     virtual std::vector<uint8_t> serialize() const = 0;
     virtual void deserialize(const uint8_t* data, size_t size) = 0;
-    std::unique_ptr<BaseEvent> event = nullptr;
 };

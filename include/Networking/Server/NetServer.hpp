@@ -23,7 +23,7 @@ class NetServer {
 
     void pollEvents();
     void sendPackets(const std::vector<uint8_t>& packet_content, ENetPeer* target_peer, const enet_uint8 channel, ENetPacketFlag const flag = ENET_PACKET_FLAG_RELIABLE);
-    void broadcastPackets(const std::unique_ptr<PacketBase>& packet, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
+    void broadcastPackets(const PacketBase* packet, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
 
 
     std::unique_ptr<PacketBase> popQueue();

@@ -11,7 +11,7 @@ class CastAbilityPacket : public PacketBase {
 public:
 
     PacketType getType() const override { return PacketType::CastAbility; }
-    std::unique_ptr<CastAbilityEvent> event;
+    CastAbilityEvent* event;
 
     
     std::vector<uint8_t> serialize() const override {

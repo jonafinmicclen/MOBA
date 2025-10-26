@@ -9,56 +9,55 @@
 
 
 class EventPacketConverter {
-    public:
+    
+    private:
 
     template<typename PacketT, typename EventT>
-    static std::unique_ptr<PacketBase> createPacket(std::unique_ptr<BaseEvent> event) {
+    inline static PacketBase* createPacket(BaseEvent* event) {
         if (!event) {
             std::cerr << "[EventPacketConverter]: Event was nullptr.\n";
             return nullptr;
         }
 
-        // Try dynamic_cast on the raw pointer
-        EventT* derivedEvent = dynamic_cast<EventT*>(event.get());
+        EventT* derivedEvent = dynamic_cast<EventT*>(event);
         if (!derivedEvent) {
             std::cerr << "[EventPacketConverter]: Invalid event type for packet.\n";
             return nullptr;
         }
 
-        // Move ownership safely into packet->event
-        auto packet = std::make_unique<PacketT>();
-        packet->event = std::unique_ptr<EventT>(static_cast<EventT*>(event.release())); 
-        // now the packet owns the event, no double delete
+        PacketBase* packetPtr = new PacketT();
+        packetPtr->event = derivedEvent; 
 
-        return packet;
+        return packetPtr;
     }
-  
 
+    public:
 
-    inline static std::unique_ptr<PacketBase> eventToPacket(std::unique_ptr<BaseEvent> event) {
-        if (!event) std::cerr << "[EventPacketConverter]: Event was nullptr.\n"; return nullptr;
+    inline static PacketBase* eventToPacket(BaseEvent* event) {
+        if (!event) {
+            std::cerr << "[EventPacketConverter]: Event was nullptr.\n"; 
+            return nullptr;
+        }
 
         EventType type = event->GetType();
         switch (type) {
             case EventType::MoveCharacter:
-                return createPacket<MoveCharacterPacket, MoveCharacterEvent>(std::move(event));
+                return createPacket<MoveCharacterPacket, MoveCharacterEvent>(event);
             case EventType::CastAbility:
-                return createPacket<CastAbilityPacket, CastAbilityEvent>(std::move(event));
+                return createPacket<CastAbilityPacket, CastAbilityEvent>(event);
         }
 
         std::cerr << "[EventPacketConverter]: Attempted to convert unknown event to packet.\n";
         return nullptr;
     }
 
-    inline static std::unique_ptr<BaseEvent> packetToEvent(std::unique_ptr<PacketBase> packet) {
-        if (!packet) {
-            std::cerr << "[EventPacketConverter]: Packet was nullptr.\n"; 
-            return nullptr;
-        }
+    inline static BaseEvent* packetToEvent(PacketBase* packet) {
+
+        std::dynamic_cast<
 
         if (!packet->event) std::cerr << "[EventPacketConverter]: Packets' event was nullptr.\n";
 
-        return std::move(packet->event);
+        return packet->event;
 
     }
 };
