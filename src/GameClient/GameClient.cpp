@@ -6,3 +6,7 @@ GameClient::GameClient() {
     renderer = Renderer();
     game = Game();
 }
+
+void GameClient::update() {
+    game.update();
+}

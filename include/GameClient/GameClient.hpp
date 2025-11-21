@@ -12,4 +12,5 @@ private:
     Game game;
 public:
     GameClient();
+    void update();
 };
