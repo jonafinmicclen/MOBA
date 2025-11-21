@@ -9,7 +9,8 @@ enum class InputEventType {
     KeyDown,
     KeyUp,
     MouseButtonDown,
-    MouseButtonUp
+    MouseButtonUp,
+    Exit
 };
 
 struct InputEvent {

@@ -1,5 +1,6 @@
-#include "Networking/Server/NetServer.hpp"
+#include "GameClient/GameClient.hpp"
 
 int main(int argc, char **argv) {
+    GameClient gameC = GameClient();
     return 0;
 }

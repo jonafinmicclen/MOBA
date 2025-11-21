@@ -2,18 +2,30 @@
 
 
 void InputManager::DispatchEvent(InputEvent& event) {
-    for (auto listener : listeners) {
-        listener->OnInputEvent(event);
+    auto it = listeners.find(event.type);
+    if (it != listeners.end()) {
+        for (auto* listener : listeners[event.type]) {
+            listener->OnInputEvent(event);
+        }
+    } else {
+        std::cout<<"[InputManager]: Unhandled Event ):"<<std::endl;
     }
+
 }
 
 void InputManager::AddListener(IInputListener* listener) {
-    listeners.push_back(listener);
+    for (InputEventType interest : listener->getInterests()) {
+        if (listeners.contains(interest)) {
+            listeners[interest].push_back(listener);
+        } else {
+            listeners[interest] = {listener};
+        }
+    }
 }
 
 void InputManager::Update() {
     SDL_Event sdlEvent;
-    while (SDL_PollEvent(&sdlEvent)) {
+    if (SDL_PollEvent(&sdlEvent)) {
         InputEvent event;
         switch (sdlEvent.type) {
 
@@ -42,6 +54,11 @@ void InputManager::Update() {
                 event.type = InputEventType::MouseButtonUp;
                 event.mousePos = {sdlEvent.button.x, sdlEvent.button.y};
                 event.mouseButton = sdlEvent.button.button;
+                DispatchEvent(event);
+                break;
+
+            case SDL_QUIT:
+                event.type = InputEventType::Exit;
                 DispatchEvent(event);
                 break;
         }
