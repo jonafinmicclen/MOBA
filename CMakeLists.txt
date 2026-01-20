@@ -11,27 +11,33 @@ cmake_policy(SET CMP0072 NEW)
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(GLEW REQUIRED)
+
+# --- GLAD setup ---
+# Assumes:
+# include/glad/glad.h
+# include/KHR/khrplatform.h
+# src/glad.c
+set(GLAD_SOURCES src/glad.c)
+set(GLAD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
 # --- Collect include directories ---
 set(PROJECT_INCLUDES
-    /usr/include                 # ENet system include
     ${OPENGL_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
-    ${GLEW_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/external
+    ${GLAD_INCLUDE_DIR}
 )
 
-# --- Collect all source and header files ---
+# --- Collect all source files ---
 file(GLOB_RECURSE ALL_CPP_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE ALL_HPP_FILES "${PROJECT_SOURCE_DIR}/include/*.hpp")
+file(GLOB_RECURSE EXTERN_HPP_FILES "${PROJECT_SOURCE_DIR}/external/*.hpp")
 
 # --- Create reusable Server library ---
 file(GLOB_RECURSE SERVERLIB_SOURCES "${PROJECT_SOURCE_DIR}/src/Networking/Server/*.cpp")
 
 add_library(ServerLib STATIC ${SERVERLIB_SOURCES})
-
-# ✅ Ensure it has *all* include directories, just like executables
 target_include_directories(ServerLib PUBLIC ${PROJECT_INCLUDES})
 
 # --- Remove server sources from global list to avoid double compilation ---
@@ -60,16 +66,21 @@ foreach(main_file ${MAIN_FILES})
 
     message(STATUS "Creating executable: ${name}")
 
-    add_executable(${name} ${main_file} ${SHARED_SOURCES} ${ALL_HPP_FILES})
+    add_executable(${name} 
+        ${main_file} 
+        ${SHARED_SOURCES} 
+        ${GLAD_SOURCES}  # compile glad.c
+    )
 
-    # Apply include directories to executables too
+    # Apply include directories to executables
     target_include_directories(${name} PRIVATE ${PROJECT_INCLUDES})
 
+    # Link libraries
     target_link_libraries(${name}
         ServerLib
         ${OPENGL_LIBRARIES}
         ${SDL2_LIBRARIES}
         enet
-        ${GLEW_LIBRARIES}
+        dl          # needed for GLAD dynamic loader on Linux
     )
 endforeach()

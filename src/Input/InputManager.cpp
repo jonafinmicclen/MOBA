@@ -8,7 +8,7 @@ void InputManager::DispatchEvent(InputEvent& event) {
             listener->OnInputEvent(event);
         }
     } else {
-        std::cout<<"[InputManager]: Unhandled Event ):"<<std::endl;
+        std::cout<<"[InputManager] Unhandled Event"<<std::endl;
     }
 
 }
@@ -25,7 +25,7 @@ void InputManager::AddListener(IInputListener* listener) {
 
 void InputManager::Update() {
     SDL_Event sdlEvent;
-    if (SDL_PollEvent(&sdlEvent)) {
+    while (SDL_PollEvent(&sdlEvent)) {
         InputEvent event;
         switch (sdlEvent.type) {
 
