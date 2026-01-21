@@ -16,7 +16,11 @@ public:
     Renderer(ResourceManager* resManager, const int width, const int height);
     ~Renderer();
 
-    void Render();
+    void beginRender();
+    void endRender();
+    void testMesh(glm::vec3 translation);
+    void uploadAssetMesh(Asset* asset);
+    void drawMesh(const std::string& mesh_name, const glm::mat4& model);
 
 private:
     struct GLMesh {
@@ -27,6 +31,9 @@ private:
         GLuint texture = 0;
     };
 
+    glm::mat4 view;
+    glm::mat4 proj;
+
     ResourceManager* resourceManager;
     SDL_Window* window;
     SDL_GLContext glContext;
@@ -35,6 +42,4 @@ private:
 
     int width, height;
 
-    void drawMesh(const std::string mesh_name);
-    void uploadAssetMesh(Asset* asset);
 };

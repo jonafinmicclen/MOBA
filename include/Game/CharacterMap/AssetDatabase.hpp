@@ -8,10 +8,11 @@ class AssetDatabase {
     std::unordered_map<std::string, AssetDefinition> defs;
 
     public:
-    AssetDatabase(){
+    AssetDatabase() {
         defs = {
             {"Naren", {"Naren", "assets/Characters/Naren/Naren.glb"}},
-            {"Map", {"Map", "assets/Maps/Map.glb"}}
+            {"Map", {"Map", "assets/Maps/Map.glb"}},
+            {"Summoners Rift", {"Summoners Rift", "assets/Maps/SummonersRift.glb"}}
         };
     }
 

@@ -7,8 +7,9 @@
 #include "Assets/ResourceManager.hpp"
 #include "Game/Game.hpp"
 #include "Assets/ModelData.hpp"
-
+#include "Game/AssetState.hpp"
 #include "Input/Listeners/ExitListener.hpp"
+#include "Input/Listeners/ArrowKeyMoveListener.hpp"
 
 class GameClient {
 private:
@@ -16,11 +17,16 @@ private:
     std::unique_ptr<Renderer> renderer;
     std::unique_ptr<Game> game;
     std::unique_ptr<ExitListener>  exitListener;
+    std::unique_ptr<ArrowKeyMoveListener>  translationListener;
     std::unique_ptr<ResourceManager> resourceManager;
 
     AssetDatabase assetDatabase;
 
     std::vector<std::string> characterArgs;
+
+    glm::vec3 translation = {0.0f, 0.0f, 0.0f};
+
+    void initRenderer();
 
     bool running = true;
 public:

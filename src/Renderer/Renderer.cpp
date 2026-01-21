@@ -69,6 +69,8 @@ void Renderer::uploadAssetMesh(Asset* asset) {
 
 Renderer::Renderer(ResourceManager* resManager, int w, int h) {
 
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); // 24-bit depth buffer
+
     width = w;
     height = h;
 
@@ -109,53 +111,79 @@ Renderer::Renderer(ResourceManager* resManager, int w, int h) {
 
     shaderProgram = createShaderProgram(vertCode.c_str(), fragCode.c_str());
 
-    glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
-
-}
-
-void Renderer::drawMesh(const std::string mesh_name) {
-    GLMesh* mesh = mesh_map.at(mesh_name).get();
-    glBindVertexArray(mesh->vao);
-    if (mesh->texture != 0) {
-        glBindTexture(GL_TEXTURE_2D, mesh->texture);
-    }
-    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-}
-
-void Renderer::Render() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-
-    glUseProgram(shaderProgram);
-
-    // VERY IMPORTANT
-    glm::mat4 model = glm::mat4(0.5f);
-    glm::mat4 view  = glm::lookAt(
-        glm::vec3(-3, -5, -3),   // camera position
-        glm::vec3(0, 0, 0),   // look at origin
+        // Camera/view/projection
+    view = glm::lookAt(
+        glm::vec3(-3, -5, -3),
+        glm::vec3(0, 0, 0),
         glm::vec3(0, 1, 0)
     );
-    glm::mat4 proj = glm::perspective(
+
+    proj = glm::perspective(
         glm::radians(60.0f),
         (float)width / (float)height,
         0.1f,
         100.0f
     );
 
-    glm::mat4 mvp = proj * view * model;
-
-    GLuint loc = glGetUniformLocation(shaderProgram, "u_MVP");
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &mvp[0][0]);
+    glEnable(GL_DEPTH_TEST);           // Enable depth testing
+    glDepthFunc(GL_LESS);              // Accept fragment if it is closer than the current depth
 
 
-    Asset* asset = resourceManager->getAsset("Naren");
-    Asset* map = resourceManager->getAsset("Map");
-    if (!asset) return;
+}
 
-    uploadAssetMesh(asset); // only upload once
-    drawMesh("Naren");
+void Renderer::drawMesh(const std::string& mesh_name, const glm::mat4& model) {
+    GLMesh* mesh = mesh_map.at(mesh_name).get();
+    glBindVertexArray(mesh->vao);
 
+    if (mesh->texture != 0) {
+        glBindTexture(GL_TEXTURE_2D, mesh->texture);
+    }
+
+    // Upload the model matrix per mesh
+    GLuint loc = glGetUniformLocation(shaderProgram, "u_Model");
+    glUniformMatrix4fv(loc, 1, GL_FALSE, &model[0][0]);
+
+    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+}
+
+void Renderer::beginRender() {
+
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glUseProgram(shaderProgram);
+
+    // Upload view & projection once per frame
+    GLuint locView = glGetUniformLocation(shaderProgram, "u_View");
+    glUniformMatrix4fv(locView, 1, GL_FALSE, &view[0][0]);
+
+    GLuint locProj = glGetUniformLocation(shaderProgram, "u_Projection");
+    glUniformMatrix4fv(locProj, 1, GL_FALSE, &proj[0][0]);
+    
+}
+
+void Renderer::testMesh(glm::vec3 translation) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Create a model transform per mesh
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f)); // example position
+    model = glm::rotate(model, (float)translation.x, {0,1,0});
+    model = glm::scale(model, glm::vec3(2.0f));                 // example scale
+
+    drawMesh("Naren", model);
+
+    // Create a model transform per mesh
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, translation); // example position
+    model = glm::scale(model, glm::vec3(1.0f));                 // example scale
+    drawMesh("Summoners Rift", model);
+}
+
+
+
+void Renderer::endRender() {
     SDL_GL_SwapWindow(window);
 }
