@@ -4,6 +4,8 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 
+#include <unordered_map>
+
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Renderer/Shader.hpp"
@@ -11,18 +13,12 @@
 
 class Renderer {
 public:
-    Renderer(ResourceManager* resManager);
+    Renderer(ResourceManager* resManager, const int width, const int height);
     ~Renderer();
 
     void Render();
 
 private:
-    ResourceManager* resourceManager;
-    SDL_Window* window;
-    SDL_GLContext glContext;
-
-    GLuint shaderProgram;
-
     struct GLMesh {
         GLuint vao = 0;
         GLuint vbo = 0;
@@ -31,5 +27,14 @@ private:
         GLuint texture = 0;
     };
 
-    GLMesh uploadAssetMesh(Asset* asset);
+    ResourceManager* resourceManager;
+    SDL_Window* window;
+    SDL_GLContext glContext;
+    std::unordered_map<std::string, std::unique_ptr<GLMesh>> mesh_map;
+    GLuint shaderProgram;
+
+    int width, height;
+
+    void drawMesh(const std::string mesh_name);
+    void uploadAssetMesh(Asset* asset);
 };

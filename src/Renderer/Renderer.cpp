@@ -5,23 +5,27 @@ Renderer::~Renderer() {
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
-Renderer::GLMesh Renderer::uploadAssetMesh(Asset* asset) {
-    GLMesh glMesh;
+void Renderer::uploadAssetMesh(Asset* asset) {
 
-    if (!asset || !asset->mesh) return glMesh;
+    auto glMesh = std::make_unique<GLMesh>();
+
+    if (!asset || !asset->mesh) {
+        std::cout<<"[Renderer] Failed to load mesh"<<std::endl;
+        return;
+    }
 
     MeshData* mesh = asset->mesh.get();
 
-    glGenVertexArrays(1, &glMesh.vao);
-    glBindVertexArray(glMesh.vao);
+    glGenVertexArrays(1, &glMesh->vao);
+    glBindVertexArray(glMesh->vao);
 
-    glGenBuffers(1, &glMesh.vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, glMesh.vbo);
+    glGenBuffers(1, &glMesh->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, glMesh->vbo);
     glBufferData(GL_ARRAY_BUFFER, mesh->vertices.size() * sizeof(Vertex),
                  mesh->vertices.data(), GL_STATIC_DRAW);
 
-    glGenBuffers(1, &glMesh.ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glMesh.ebo);
+    glGenBuffers(1, &glMesh->ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glMesh->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indices.size() * sizeof(uint32_t),
                  mesh->indices.data(), GL_STATIC_DRAW);
 
@@ -40,13 +44,13 @@ Renderer::GLMesh Renderer::uploadAssetMesh(Asset* asset) {
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                           (void*)offsetof(Vertex, uv));
 
-    glMesh.indexCount = mesh->indices.size();
+    glMesh->indexCount = mesh->indices.size();
 
     // Upload first texture if available
     if (!mesh->textures.empty()) {
         auto& tex = mesh->textures[0];
-        glGenTextures(1, &glMesh.texture);
-        glBindTexture(GL_TEXTURE_2D, glMesh.texture);
+        glGenTextures(1, &glMesh->texture);
+        glBindTexture(GL_TEXTURE_2D, glMesh->texture);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height,
                      0, GL_RGBA, GL_UNSIGNED_BYTE, tex->data.data());
@@ -56,11 +60,17 @@ Renderer::GLMesh Renderer::uploadAssetMesh(Asset* asset) {
     }
 
     glBindVertexArray(0);
-    return glMesh;
+
+    // Store mesh
+    mesh_map[asset->name] = std::move(glMesh);
+    return;
 }
 
 
-Renderer::Renderer(ResourceManager* resManager) {
+Renderer::Renderer(ResourceManager* resManager, int w, int h) {
+
+    width = w;
+    height = h;
 
     resourceManager = resManager;
 
@@ -77,7 +87,7 @@ Renderer::Renderer(ResourceManager* resManager) {
 
 
     window = SDL_CreateWindow("League of Legends 2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                          1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+                                          width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (!window) {
         std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -103,6 +113,16 @@ Renderer::Renderer(ResourceManager* resManager) {
 
 }
 
+void Renderer::drawMesh(const std::string mesh_name) {
+    GLMesh* mesh = mesh_map.at(mesh_name).get();
+    glBindVertexArray(mesh->vao);
+    if (mesh->texture != 0) {
+        glBindTexture(GL_TEXTURE_2D, mesh->texture);
+    }
+    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+}
+
 void Renderer::Render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -111,15 +131,15 @@ void Renderer::Render() {
     glUseProgram(shaderProgram);
 
     // VERY IMPORTANT
-    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 model = glm::mat4(0.5f);
     glm::mat4 view  = glm::lookAt(
-        glm::vec3(0, 0, 10),   // camera position
+        glm::vec3(-3, -5, -3),   // camera position
         glm::vec3(0, 0, 0),   // look at origin
         glm::vec3(0, 1, 0)
     );
     glm::mat4 proj = glm::perspective(
         glm::radians(60.0f),
-        1920.0f / 1080.0f,
+        (float)width / (float)height,
         0.1f,
         100.0f
     );
@@ -131,18 +151,11 @@ void Renderer::Render() {
 
 
     Asset* asset = resourceManager->getAsset("Naren");
+    Asset* map = resourceManager->getAsset("Map");
     if (!asset) return;
 
-    static GLMesh glMesh = uploadAssetMesh(asset); // only upload once
+    uploadAssetMesh(asset); // only upload once
+    drawMesh("Naren");
 
-    glBindVertexArray(glMesh.vao);
-
-    if (glMesh.texture != 0) {
-        glBindTexture(GL_TEXTURE_2D, glMesh.texture);
-    }
-
-    glDrawElements(GL_TRIANGLES, glMesh.indexCount, GL_UNSIGNED_INT, 0);
-
-    glBindVertexArray(0);
     SDL_GL_SwapWindow(window);
 }

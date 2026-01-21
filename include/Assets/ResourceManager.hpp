@@ -8,7 +8,7 @@
 #include <unordered_map>
 
 #include "GLBLoader.hpp"
-#include "Game/CharacterMap/CharacterDatabase.hpp"
+#include "Game/CharacterMap/AssetDatabase.hpp"
 
 #include "Assets/ModelData.hpp"
 

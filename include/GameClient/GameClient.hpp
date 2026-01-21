@@ -18,7 +18,7 @@ private:
     std::unique_ptr<ExitListener>  exitListener;
     std::unique_ptr<ResourceManager> resourceManager;
 
-    CharacterDatabase characterDatabase;
+    AssetDatabase assetDatabase;
 
     std::vector<std::string> characterArgs;
 

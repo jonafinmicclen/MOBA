@@ -48,4 +48,5 @@ struct Asset {
     std::unique_ptr<MeshData> mesh;
     std::vector<std::shared_ptr<Texture>> textures;
     std::vector<AnimationData> animations;
+    std::string name;
 };
