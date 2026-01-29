@@ -30,7 +30,8 @@ private:
         size_t indexCount = 0;
 
         std::vector<GLuint> textures;        // All textures for this mesh
-        std::vector<int> faceTextureIndices; // Texture index per triangle
+        std::unordered_map<int, std::vector<uint32_t>> textureToFaceIndices;
+
     };
 
 

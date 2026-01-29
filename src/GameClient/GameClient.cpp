@@ -21,7 +21,7 @@ GameClient::GameClient() {
 
     }
 
-    renderer = std::make_unique<Renderer>(resourceManager.get(), 1920, 1080);
+    renderer = std::make_unique<Renderer>(resourceManager.get(), 3840, 2160);
 
     for (auto& chararg : characterArgs) {
         // Upload to renderer
