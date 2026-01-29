@@ -6,65 +6,126 @@ Renderer::~Renderer() {
     SDL_Quit();
 }
 void Renderer::uploadAssetMesh(Asset* asset) {
-
-    auto glMesh = std::make_unique<GLMesh>();
-
     if (!asset || !asset->mesh) {
-        std::cout<<"[Renderer] Failed to load mesh"<<std::endl;
+        std::cout << "[Renderer] Failed to load mesh" << std::endl;
         return;
     }
 
     MeshData* mesh = asset->mesh.get();
+    auto glMesh = std::make_unique<GLMesh>();
 
     glGenVertexArrays(1, &glMesh->vao);
     glBindVertexArray(glMesh->vao);
 
     glGenBuffers(1, &glMesh->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, glMesh->vbo);
-    glBufferData(GL_ARRAY_BUFFER, mesh->vertices.size() * sizeof(Vertex),
-                 mesh->vertices.data(), GL_STATIC_DRAW);
-
     glGenBuffers(1, &glMesh->ebo);
+
+    // Vertex struct now includes texID
+    struct VertexGPU {
+        glm::vec3 position;
+        glm::vec3 normal;
+        glm::vec2 uv;
+        int texID;
+    };
+
+    // Duplicate vertices per-face to assign correct texID
+    std::vector<VertexGPU> gpuVertices;
+    std::vector<uint32_t> gpuIndices;
+
+    for (size_t i = 0; i < mesh->indices.size(); i += 3) {
+        int faceTexID = (i / 3 < mesh->faceTextureIndices.size()) ? mesh->faceTextureIndices[i / 3] : 0;
+
+        for (int j = 0; j < 3; ++j) {
+            uint32_t idx = mesh->indices[i + j];
+            Vertex& v = mesh->vertices[idx];
+
+            VertexGPU vg{};
+            vg.position = v.position;
+            vg.normal = v.normal;
+            vg.uv = v.uv;
+            vg.texID = faceTexID;
+
+            gpuIndices.push_back(static_cast<uint32_t>(gpuVertices.size()));
+            gpuVertices.push_back(vg);
+        }
+    }
+
+    // Upload vertex buffer
+    glBindBuffer(GL_ARRAY_BUFFER, glMesh->vbo);
+    glBufferData(GL_ARRAY_BUFFER, gpuVertices.size() * sizeof(VertexGPU), gpuVertices.data(), GL_STATIC_DRAW);
+
+    // Upload index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glMesh->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indices.size() * sizeof(uint32_t),
-                 mesh->indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, gpuIndices.size() * sizeof(uint32_t), gpuIndices.data(), GL_STATIC_DRAW);
 
-    // Vertex positions
+    // Vertex attributes
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          (void*)offsetof(Vertex, position));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexGPU), (void*)offsetof(VertexGPU, position));
 
-    // Normals
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          (void*)offsetof(Vertex, normal));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexGPU), (void*)offsetof(VertexGPU, normal));
 
-    // UVs
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          (void*)offsetof(Vertex, uv));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexGPU), (void*)offsetof(VertexGPU, uv));
 
-    glMesh->indexCount = mesh->indices.size();
+    // Per-vertex texID
+    glEnableVertexAttribArray(3);
+    glVertexAttribIPointer(3, 1, GL_INT, sizeof(VertexGPU), (void*)offsetof(VertexGPU, texID));
 
-    // Upload first texture if available
-    if (!mesh->textures.empty()) {
-        auto& tex = mesh->textures[0];
-        glGenTextures(1, &glMesh->texture);
-        glBindTexture(GL_TEXTURE_2D, glMesh->texture);
+    glMesh->indexCount = gpuIndices.size();
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height,
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, tex->data.data());
-
+    // Upload textures
+    glMesh->textures.resize(mesh->textures.size());
+    for (size_t i = 0; i < mesh->textures.size(); ++i) {
+        auto& tex = mesh->textures[i];
+        GLuint texID;
+        glGenTextures(1, &texID);
+        glBindTexture(GL_TEXTURE_2D, texID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->data.data());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glMesh->textures[i] = texID;
     }
 
     glBindVertexArray(0);
-
-    // Store mesh
     mesh_map[asset->name] = std::move(glMesh);
-    return;
 }
+
+void Renderer::drawMesh(const std::string& mesh_name, const glm::mat4& model) {
+    GLMesh* mesh = mesh_map.at(mesh_name).get();
+    if (!mesh) return;
+
+    glBindVertexArray(mesh->vao);
+    glUseProgram(shaderProgram);
+
+    // Upload matrices
+    GLuint locModel = glGetUniformLocation(shaderProgram, "u_Model");
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+
+    GLuint locView = glGetUniformLocation(shaderProgram, "u_View");
+    glUniformMatrix4fv(locView, 1, GL_FALSE, &view[0][0]);
+
+    GLuint locProj = glGetUniformLocation(shaderProgram, "u_Projection");
+    glUniformMatrix4fv(locProj, 1, GL_FALSE, &proj[0][0]);
+
+    // Bind all textures
+    for (size_t i = 0; i < mesh->textures.size(); ++i) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, mesh->textures[i]);
+
+        std::string samplerName = "u_Textures[" + std::to_string(i) + "]";
+        GLuint locSampler = glGetUniformLocation(shaderProgram, samplerName.c_str());
+        glUniform1i(locSampler, static_cast<int>(i));
+    }
+
+    // Draw
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->indexCount), GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(0);
+    glActiveTexture(GL_TEXTURE0);
+}
+
 
 
 Renderer::Renderer(ResourceManager* resManager, int w, int h) {
@@ -131,59 +192,34 @@ Renderer::Renderer(ResourceManager* resManager, int w, int h) {
 
 }
 
-void Renderer::drawMesh(const std::string& mesh_name, const glm::mat4& model) {
-    GLMesh* mesh = mesh_map.at(mesh_name).get();
-    glBindVertexArray(mesh->vao);
-
-    if (mesh->texture != 0) {
-        glBindTexture(GL_TEXTURE_2D, mesh->texture);
-    }
-
-    // Upload the model matrix per mesh
-    GLuint loc = glGetUniformLocation(shaderProgram, "u_Model");
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &model[0][0]);
-
-    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-}
-
 void Renderer::beginRender() {
-
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glUseProgram(shaderProgram);
 
-    // Upload view & projection once per frame
     GLuint locView = glGetUniformLocation(shaderProgram, "u_View");
     glUniformMatrix4fv(locView, 1, GL_FALSE, &view[0][0]);
 
     GLuint locProj = glGetUniformLocation(shaderProgram, "u_Projection");
     glUniformMatrix4fv(locProj, 1, GL_FALSE, &proj[0][0]);
-    
+}
+
+void Renderer::endRender() {
+    SDL_GL_SwapWindow(window);
 }
 
 void Renderer::testMesh(glm::vec3 translation) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Create a model transform per mesh
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f)); // example position
-    model = glm::rotate(model, (float)translation.x, {0,1,0});
-    model = glm::scale(model, glm::vec3(2.0f));                 // example scale
-
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, (float)translation.x, glm::vec3(0,1,0));
+    model = glm::scale(model, glm::vec3(2.0f));
     drawMesh("Naren", model);
 
-    // Create a model transform per mesh
     model = glm::mat4(1.0f);
-    model = glm::translate(model, translation); // example position
-    model = glm::scale(model, glm::vec3(1.0f));                 // example scale
+    model = glm::translate(model, translation);
+    model = glm::scale(model, glm::vec3(1.0f));
     drawMesh("Summoners Rift", model);
-}
-
-
-
-void Renderer::endRender() {
-    SDL_GL_SwapWindow(window);
 }

@@ -15,13 +15,17 @@ class ArrowKeyMoveListener : public IInputListener {
     void OnInputEvent(InputEvent& event) override {
         switch (event.key) {
             case SDLK_UP:
-                translation->x -= 0.1f;
+                translation->x -= 1.0f;
+                break;
             case SDLK_DOWN:
-                translation-> x +=0.1f;
+                translation-> x +=1.0f;
+                break;
             case SDLK_LEFT:
-                translation->y -= 0.1f;
+                translation->z -= 1.0f;
+                break;
             case SDLK_RIGHT:
-                translation->y += 0.1f;
+                translation->z += 1.0f;
+                break;
         }
     }
 

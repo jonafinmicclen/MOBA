@@ -28,8 +28,12 @@ private:
         GLuint vbo = 0;
         GLuint ebo = 0;
         size_t indexCount = 0;
-        GLuint texture = 0;
+
+        std::vector<GLuint> textures;        // All textures for this mesh
+        std::vector<int> faceTextureIndices; // Texture index per triangle
     };
+
+
 
     glm::mat4 view;
     glm::mat4 proj;

@@ -25,28 +25,41 @@ struct AnimationData {
 };
 
 struct Texture {
-    GLuint id;
-    int width;
-    int height;
-    int channels;
-    std::vector<uint8_t> data;
+    GLuint id = 0;               // OpenGL texture ID (for GPU upload)
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    int uvIndex = 0;             // which UV set to sample
+    std::vector<uint8_t> data;   // CPU-side image data
 };
+
 
 struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
-    glm::vec3 uv;
+    glm::vec2 uv; // dynamic UV sets (TEXCOORD_0, TEXCOORD_1, etc.)
 };
+
 
 struct MeshData {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
+    std::vector<int> faceTextureIndices;
     std::vector<std::shared_ptr<Texture>> textures;
 };
 
+struct Material {
+    std::shared_ptr<Texture> albedo;
+    std::shared_ptr<Texture> lightmap;
+    std::shared_ptr<Texture> normal;
+    std::shared_ptr<Texture> occlusion;
+    std::shared_ptr<Texture> emissive;
+};
+
+
 struct Asset {
     std::unique_ptr<MeshData> mesh;
-    std::vector<std::shared_ptr<Texture>> textures;
+    std::vector<std::shared_ptr<Material>> materials;
     std::vector<AnimationData> animations;
     std::string name;
 };
