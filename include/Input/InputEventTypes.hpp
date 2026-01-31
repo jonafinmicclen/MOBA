@@ -10,6 +10,7 @@ enum class InputEventType {
     KeyUp,
     MouseButtonDown,
     MouseButtonUp,
+    MouseMotion,
     Exit
 };
 

@@ -8,7 +8,7 @@ void InputManager::DispatchEvent(InputEvent& event) {
             listener->OnInputEvent(event);
         }
     } else {
-        std::cout<<"[InputManager] Unhandled Event"<<std::endl;
+        DEBUG_LOG("Unhandled Event; Type: "<<(int)event.type);
     }
 
 }
@@ -57,10 +57,18 @@ void InputManager::Update() {
                 DispatchEvent(event);
                 break;
 
+            case SDL_MOUSEMOTION:
+                break;
+                event.type = InputEventType::MouseMotion;
+                event.mousePos = {sdlEvent.button.x, sdlEvent.button.y};
+                DispatchEvent(event);
+                break;
+
             case SDL_QUIT:
                 event.type = InputEventType::Exit;
                 DispatchEvent(event);
                 break;
+
         }
     }
 }

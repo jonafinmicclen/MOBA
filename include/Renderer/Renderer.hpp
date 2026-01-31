@@ -22,6 +22,8 @@ public:
     void uploadAssetMesh(Asset* asset);
     void drawMesh(const std::string& mesh_name, const glm::mat4& model);
 
+    void moveCamera2D(const glm::vec2 delta);
+
 private:
     struct GLMesh {
         GLuint vao = 0;
@@ -33,6 +35,10 @@ private:
         std::unordered_map<int, std::vector<uint32_t>> textureToFaceIndices;
 
     };
+
+    glm::vec3 camPos;
+    glm::vec3 camTarget;
+    glm::vec3 camUp ;
 
 
 

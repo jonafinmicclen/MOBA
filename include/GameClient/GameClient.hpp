@@ -11,6 +11,8 @@
 #include "Input/Listeners/ExitListener.hpp"
 #include "Input/Listeners/ArrowKeyMoveListener.hpp"
 
+#include "Debug/debug.hpp"
+
 class GameClient {
 private:
     std::unique_ptr<InputManager> inputManager; 
@@ -28,9 +30,13 @@ private:
 
     void initRenderer();
 
+    int window_width = 1920;
+    int window_height = 1080;
+
     bool running = true;
 public:
     GameClient();
     void Run();
+    void MoveCameraTowardsMouse();
 
 };

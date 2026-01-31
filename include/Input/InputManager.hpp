@@ -8,6 +8,8 @@
 #include "Input/InputEventTypes.hpp"
 #include "Input/IInputListener.hpp"
 
+#include "Debug/debug.hpp"
+
 
 class InputManager {
     private:

@@ -158,6 +158,12 @@ Renderer::Renderer(ResourceManager* resManager, int w, int h) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+
 
     window = SDL_CreateWindow("League of Legends 2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                           width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
@@ -182,27 +188,37 @@ Renderer::Renderer(ResourceManager* resManager, int w, int h) {
 
     shaderProgram = createShaderProgram(vertCode.c_str(), fragCode.c_str());
 
-        // Camera/view/projection
-    view = glm::lookAt(
-        glm::vec3(-3, -5, -3),
-        glm::vec3(0, 0, 0),
-        glm::vec3(0, 1, 0)
-    );
+    // Camera/view/projection we should seperate this into a cam class
+    camPos    = glm::vec3(1.0f, 2.0f, -4.0f);
+    camTarget = glm::vec3(0.0f, 0.0f,  0.0f);
+    camUp     = glm::vec3(0.0f, 0.0f, -1.0f);
 
     proj = glm::perspective(
-        glm::radians(60.0f),
+        glm::radians(37.0f),  // slightly narrower FOV
         (float)width / (float)height,
         0.1f,
         100.0f
     );
 
-    glEnable(GL_DEPTH_TEST);           // Enable depth testing
-    glDepthFunc(GL_LESS);              // Accept fragment if it is closer than the current depth
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 
 }
 
 void Renderer::beginRender() {
+
+    view = glm::lookAt(
+        camPos,
+        camTarget,
+        camUp
+    );
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -213,6 +229,8 @@ void Renderer::beginRender() {
 
     GLuint locProj = glGetUniformLocation(shaderProgram, "u_Projection");
     glUniformMatrix4fv(locProj, 1, GL_FALSE, &proj[0][0]);
+
+    
 }
 
 void Renderer::endRender() {
@@ -229,7 +247,25 @@ void Renderer::testMesh(glm::vec3 translation) {
     drawMesh("Naren", model);
 
     model = glm::mat4(1.0f);
-    model = glm::translate(model, translation);
+    model = glm::translate(model, glm::vec3(0.0f,0.0f,17.0f));
     model = glm::scale(model, glm::vec3(1.0f));
     drawMesh("Summoners Rift", model);
+}
+
+void Renderer::moveCamera2D(const glm::vec2 delta) {
+    glm::vec3 forward = glm::normalize(camTarget - camPos);
+    glm::vec3 right   = glm::normalize(glm::cross(forward, camUp));
+
+    glm::vec3 groundForward = glm::normalize(
+        glm::vec3(forward.x, forward.y, 0.0f)
+    );
+
+    glm::vec3 move =
+        right * delta.x +
+        groundForward * delta.y;
+
+    camPos    += move;
+    camTarget += move;
+
+    view = glm::lookAt(camPos, camTarget, camUp);
 }
