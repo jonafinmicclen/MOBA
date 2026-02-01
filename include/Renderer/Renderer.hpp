@@ -11,6 +11,9 @@
 #include "Renderer/Shader.hpp"
 #include "Assets/ResourceManager.hpp"
 
+#include "GameClient/Camera/Camera.hpp"
+#include <glm/gtx/string_cast.hpp>
+
 class Renderer {
 public:
     Renderer(ResourceManager* resManager, const int width, const int height);
@@ -22,7 +25,7 @@ public:
     void uploadAssetMesh(Asset* asset);
     void drawMesh(const std::string& mesh_name, const glm::mat4& model);
 
-    void moveCamera2D(const glm::vec2 delta);
+    void setCamera(Camera* cam) {camera = cam; view=cam->getView(); proj=camera->getProjection((float)width/(float)height); }
 
 private:
     struct GLMesh {
@@ -36,20 +39,16 @@ private:
 
     };
 
-    glm::vec3 camPos;
-    glm::vec3 camTarget;
-    glm::vec3 camUp ;
-
-
-
-    glm::mat4 view;
-    glm::mat4 proj;
+    Camera* camera;
 
     ResourceManager* resourceManager;
     SDL_Window* window;
     SDL_GLContext glContext;
     std::unordered_map<std::string, std::unique_ptr<GLMesh>> mesh_map;
     GLuint shaderProgram;
+
+    glm::mat4 view;
+    glm::mat4 proj;
 
     int width, height;
 

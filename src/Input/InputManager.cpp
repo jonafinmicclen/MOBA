@@ -45,14 +45,20 @@ void InputManager::Update() {
 
             case SDL_MOUSEBUTTONDOWN:
                 event.type = InputEventType::MouseButtonDown;
-                event.mousePos = {sdlEvent.button.x, sdlEvent.button.y};
+                event.mousePos = {
+                    static_cast<float>(sdlEvent.button.x),
+                    static_cast<float>(sdlEvent.button.y)
+                };
                 event.mouseButton = sdlEvent.button.button;
                 DispatchEvent(event);
                 break;
 
             case SDL_MOUSEBUTTONUP:
                 event.type = InputEventType::MouseButtonUp;
-                event.mousePos = {sdlEvent.button.x, sdlEvent.button.y};
+                event.mousePos = {
+                    static_cast<float>(sdlEvent.button.x),
+                    static_cast<float>(sdlEvent.button.y)
+                };
                 event.mouseButton = sdlEvent.button.button;
                 DispatchEvent(event);
                 break;
@@ -60,7 +66,10 @@ void InputManager::Update() {
             case SDL_MOUSEMOTION:
                 break;
                 event.type = InputEventType::MouseMotion;
-                event.mousePos = {sdlEvent.button.x, sdlEvent.button.y};
+                event.mousePos = {
+                    static_cast<float>(sdlEvent.button.x),
+                    static_cast<float>(sdlEvent.button.y)
+                };
                 DispatchEvent(event);
                 break;
 

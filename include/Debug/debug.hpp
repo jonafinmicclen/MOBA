@@ -10,16 +10,21 @@
     #endif
 
     inline std::string extractClassMethod(const std::string& funcSig) {
-        // Find the last space (before return type)
-        auto pos = funcSig.rfind(" ");
-        std::string trimmed = (pos != std::string::npos) ? funcSig.substr(pos + 1) : funcSig;
+        // 1. Remove arguments: find first '('
+        auto parenPos = funcSig.find('(');
+        std::string noArgs = (parenPos != std::string::npos) ? funcSig.substr(0, parenPos) : funcSig;
 
-        // Remove argument list
-        auto parenPos = trimmed.find("(");
-        if (parenPos != std::string::npos)
-            trimmed = trimmed.substr(0, parenPos);
+        // 2. Trim return type: find last space before method name
+        auto lastSpace = noArgs.rfind(' ');
+        std::string classAndMethod = (lastSpace != std::string::npos) ? noArgs.substr(lastSpace + 1) : noArgs;
 
-        return trimmed;
+        // 3. Optional: if templates introduce weird spacing, remove any leading/trailing spaces
+        size_t first = classAndMethod.find_first_not_of(" \t");
+        size_t last = classAndMethod.find_last_not_of(" \t");
+        if (first != std::string::npos && last != std::string::npos)
+            classAndMethod = classAndMethod.substr(first, last - first + 1);
+
+        return classAndMethod;
     }
 
     #define DEBUG_LOG(x) \

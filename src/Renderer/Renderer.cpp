@@ -188,18 +188,6 @@ Renderer::Renderer(ResourceManager* resManager, int w, int h) {
 
     shaderProgram = createShaderProgram(vertCode.c_str(), fragCode.c_str());
 
-    // Camera/view/projection we should seperate this into a cam class
-    camPos    = glm::vec3(1.0f, 2.0f, -4.0f);
-    camTarget = glm::vec3(0.0f, 0.0f,  0.0f);
-    camUp     = glm::vec3(0.0f, 0.0f, -1.0f);
-
-    proj = glm::perspective(
-        glm::radians(37.0f),  // slightly narrower FOV
-        (float)width / (float)height,
-        0.1f,
-        100.0f
-    );
-
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
@@ -213,11 +201,8 @@ Renderer::Renderer(ResourceManager* resManager, int w, int h) {
 
 void Renderer::beginRender() {
 
-    view = glm::lookAt(
-        camPos,
-        camTarget,
-        camUp
-    );
+    view = camera->getView();
+    proj = camera->getProjection((float)width/(float)height);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -250,22 +235,4 @@ void Renderer::testMesh(glm::vec3 translation) {
     model = glm::translate(model, glm::vec3(0.0f,0.0f,17.0f));
     model = glm::scale(model, glm::vec3(1.0f));
     drawMesh("Summoners Rift", model);
-}
-
-void Renderer::moveCamera2D(const glm::vec2 delta) {
-    glm::vec3 forward = glm::normalize(camTarget - camPos);
-    glm::vec3 right   = glm::normalize(glm::cross(forward, camUp));
-
-    glm::vec3 groundForward = glm::normalize(
-        glm::vec3(forward.x, forward.y, 0.0f)
-    );
-
-    glm::vec3 move =
-        right * delta.x +
-        groundForward * delta.y;
-
-    camPos    += move;
-    camTarget += move;
-
-    view = glm::lookAt(camPos, camTarget, camUp);
 }

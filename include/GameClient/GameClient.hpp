@@ -11,6 +11,9 @@
 #include "Input/Listeners/ExitListener.hpp"
 #include "Input/Listeners/ArrowKeyMoveListener.hpp"
 
+#include "GameClient/Camera/Camera.hpp"
+#include "GameClient/Camera/CameraController.hpp"
+
 #include "Debug/debug.hpp"
 
 class GameClient {
@@ -21,6 +24,9 @@ private:
     std::unique_ptr<ExitListener>  exitListener;
     std::unique_ptr<ArrowKeyMoveListener>  translationListener;
     std::unique_ptr<ResourceManager> resourceManager;
+
+    std::unique_ptr<Camera> camera;
+    std::unique_ptr<CameraController> cameraController;
 
     AssetDatabase assetDatabase;
 
@@ -37,6 +43,5 @@ private:
 public:
     GameClient();
     void Run();
-    void MoveCameraTowardsMouse();
 
 };
