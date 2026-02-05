@@ -13,7 +13,6 @@ NetClient::NetClient(const char* server_add, int port) {
         throw std::runtime_error("Failed to create ENet client");
     }
 
-    connectServer();
 }
 
 NetClient::~NetClient() {
@@ -53,9 +52,9 @@ void NetClient::connectServer() {
     enet_address_set_host (& address, server_address);
     address.port = server_port;
     
-    peer = enet_host_connect(client, & address, 2, 0);    
+    peer.getENetPeer() = enet_host_connect(client, & address, 2, 0);    
     
-    if (peer == nullptr) {
+    if (peer.getENetPeer() == nullptr) {
         std::cout<<"No available peers for initiating an ENet connection.\n";
         exit (EXIT_FAILURE);
     }
@@ -64,10 +63,11 @@ void NetClient::connectServer() {
         event.type == ENET_EVENT_TYPE_CONNECT)
     {
         std::cout<<std::format("Connection to server @ {}:{} succeeded.\n", server_address, server_port);
+        on_connection();
     }
     else
     {
-        enet_peer_reset (peer);
+        enet_peer_reset (peer.getENetPeer());
         std::cout<<std::format("Connection to server @ {}:{} failed.\n", server_address, server_port);
 
     }
@@ -81,7 +81,7 @@ void NetClient::sendPackets(const std::vector<uint8_t>& packet_content, const en
         flag
     );
 
-    enet_peer_send (peer, channel, packet);
+    enet_peer_send (peer.getENetPeer(), channel, packet);
     enet_host_flush(client);
 }
 
@@ -90,4 +90,25 @@ std::unique_ptr<PacketBase> NetClient::popPacketQueue() {
     auto packet = std::move(packet_queue.front());
     packet_queue.pop();
     return packet;
+}
+
+void NetClient::on_connection() {
+
+}
+
+void NetClient::push_outgoing_packet(std::unique_ptr<PacketBase> packet, ENetPacketFlag flag) {
+    outgoing_packets.push({std::move(packet), flag});
+}
+
+int NetClient::send_packet_queue() {
+    int n_sent = outgoing_packets.size();
+    while (outgoing_packets.size()) {
+        auto packet_flag = outgoing_packets.front();
+        std::unique_ptr<PacketBase> packet = packet_flag.first;
+        ENetPacketFlag flag = packet_flag.second;
+        outgoing_packets.pop();
+        auto bytes = packet->serialize();
+        sendPackets(&bytes, 0, flag);
+    }
+    return n_sent;
 }

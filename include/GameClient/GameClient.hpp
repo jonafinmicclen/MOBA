@@ -2,6 +2,9 @@
 
 #include <memory>
 
+#include <nlohmann/json.hpp>
+#include <enet/enet.h>
+
 #include "Debug/debug.hpp"
 
 #include "Renderer/Renderer.hpp"
@@ -20,6 +23,7 @@
 #include "GameClient/Camera/CameraController.hpp"
 
 #include "Networking/Client/NetClient.hpp"
+#include "Networking/Packets/JSONPacket.hpp"
 
 
 class GameClient {
@@ -48,6 +52,7 @@ private:
     void initialiseRenderer();
     void loadAssets();
     void Render();
+    void init_server_connection();
 
     int window_width = 1920;
     int window_height = 1080;

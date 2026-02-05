@@ -8,6 +8,7 @@ GameClient::GameClient() {
     cameraController = std::make_unique<CameraController>(camera.get());
     inputManager = std::make_unique<InputManager>();
     game = std::make_unique<Game>();
+    netClient = std::make_unique<NetClient>();
 
     exitListener = std::make_unique<ExitListener>(&running);
     inputManager->AddListener(exitListener.get());
@@ -64,3 +65,13 @@ void GameClient::Run() {
 
     }
 } 
+
+void GameClient::init_server_connection() {
+    while (!netClient->is_connected()) {
+        netClient->connectServer();
+    }
+    auto packet = JSONPacket();
+    packet.json_from_file("RuntimeData/auth_ctos.json");
+    netClient->push_outgoing_packet(packet, ENET_PACKET_FLAG_RELIABLE);
+    netClient->send_packet_queue();
+}

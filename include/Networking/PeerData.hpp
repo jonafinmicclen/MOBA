@@ -7,7 +7,7 @@
 
 class PeerData {
     public:
-    PeerData(uint8_t ID, ENetPeer* ENetPeer) : id(ID), enetpeer(ENetPeer) {}
+    PeerData() {}
 
     ENetPeer* getENetPeer() const {
         if (!enetpeer) {
@@ -23,9 +23,9 @@ class PeerData {
         enetpeer->state == ENET_PEER_STATE_CONNECTION_SUCCEEDED;
         return connected;
     }
-    uint8_t getId() const { return id; }
+    std::string getId() const { return id; }
 
     private:
-    const int8_t id;
-    ENetPeer* enetpeer;
+    std::string id;
+    ENetPeer* enetpeer = nullptr;
 };  

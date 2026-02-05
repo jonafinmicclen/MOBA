@@ -31,7 +31,6 @@ class NetServer {
 
 
     private:
-
     std::vector<std::shared_ptr<PeerData>> connected_clients;
 
     uint8_t next_client_id = 0;
