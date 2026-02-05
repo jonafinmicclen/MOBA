@@ -8,6 +8,10 @@
 #include "Networking/Packets/TestPacket.hpp"
 #include "Networking/PeerData.hpp"
 
+#include "Networking/Message/Message.hpp"
+
+#include "Networking/PacketFlag.hpp"
+
 #include <enet/enet.h>
 
 #include <format>
@@ -27,16 +31,25 @@ class NetServer {
     void sendPackets(const std::vector<uint8_t>& packet_content, ENetPeer* target_peer, const enet_uint8 channel, ENetPacketFlag const flag = ENET_PACKET_FLAG_RELIABLE);
     void broadcastPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
 
-    std::unique_ptr<PacketBase> popPacketQueue();
+    std::unique_ptr<PacketBase> popPacket(const PacketFlag flag);
 
 
     private:
+    static constexpr uint8_t FLAG_TO_CHANNEL(PacketFlag flag) {
+        switch(flag) {
+            case PacketFlag::GAMEPLAY: return 0;
+            case PacketFlag::MOVEMENT: return 1;
+            case PacketFlag::CHAT:     return 2;
+        }
+    }
+
     std::vector<std::shared_ptr<PeerData>> connected_clients;
 
     uint8_t next_client_id = 0;
 
-
-    std::queue<std::unique_ptr<PacketBase>> packet_queue;
+    std::queue<std::unique_ptr<PacketBase>> gameplay_queue;
+    std::queue<std::unique_ptr<PacketBase>> movement_queue;
+    std::queue<std::unique_ptr<PacketBase>> chat_queue;
 
     ENetAddress address;
     ENetHost* server;
@@ -44,5 +57,7 @@ class NetServer {
 
     const int max_clients;
 
+    std::queue<std::unique_ptr<PacketBase>>* getQueueFromFlag(const PacketFlag flag);
     void initialiseClientConnection(ENetPeer* peer);
+    void handleRecieve(ENetEvent event);
 };

@@ -11,6 +11,8 @@
 
 #include "Game/Game.hpp"
 #include "Game/ObjectState.hpp"
+#include "Game/Maps/MapFactory.hpp"
+#include "Game/Maps/SummonersRift.hpp"
 
 #include "Assets/ModelData.hpp"
 #include "Assets/ResourceManager.hpp"
@@ -23,7 +25,8 @@
 #include "GameClient/Camera/CameraController.hpp"
 
 #include "Networking/Client/NetClient.hpp"
-#include "Networking/Packets/JSONPacket.hpp"
+#include "Networking/Message/Message.hpp"
+#include "GameClient/Packets/ClientAuthenticationPacket.hpp"
 
 
 class GameClient {

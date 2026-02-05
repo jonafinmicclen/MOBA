@@ -6,7 +6,7 @@
 #include <memory>
 
 template<typename Derived, PacketType Type>
-class AutoRegisterPacket : public PacketBase {
+class AutoRegisterPacket : public virtual PacketBase {
 private:
     static inline bool registered = [] {
         PacketFactory::registerPacket(

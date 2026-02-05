@@ -52,9 +52,9 @@ void NetClient::connectServer() {
     enet_address_set_host (& address, server_address);
     address.port = server_port;
     
-    peer.getENetPeer() = enet_host_connect(client, & address, 2, 0);    
+    ENetPeer* peer = enet_host_connect(client, & address, 2, 0);    
     
-    if (peer.getENetPeer() == nullptr) {
+    if (peer == nullptr) {
         std::cout<<"No available peers for initiating an ENet connection.\n";
         exit (EXIT_FAILURE);
     }
@@ -63,25 +63,25 @@ void NetClient::connectServer() {
         event.type == ENET_EVENT_TYPE_CONNECT)
     {
         std::cout<<std::format("Connection to server @ {}:{} succeeded.\n", server_address, server_port);
-        on_connection();
+        on_connection(peer);
     }
     else
     {
-        enet_peer_reset (peer.getENetPeer());
+        enet_peer_reset (peer);
         std::cout<<std::format("Connection to server @ {}:{} failed.\n", server_address, server_port);
 
     }
 }
 
 void NetClient::sendPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag) {
-
+    // Flag is defaulted
     ENetPacket* packet = enet_packet_create(
         packet_content.data(),
         packet_content.size(),
         flag
     );
 
-    enet_peer_send (peer.getENetPeer(), channel, packet);
+    enet_peer_send (peer_data->getENetPeer(), channel, packet);
     enet_host_flush(client);
 }
 
@@ -92,23 +92,26 @@ std::unique_ptr<PacketBase> NetClient::popPacketQueue() {
     return packet;
 }
 
-void NetClient::on_connection() {
-
+void NetClient::on_connection(ENetPeer* peer) {
+    peer_data = std::make_unique<PeerData>(peer);
+    peer_data->setID("Server");
 }
 
-void NetClient::push_outgoing_packet(std::unique_ptr<PacketBase> packet, ENetPacketFlag flag) {
-    outgoing_packets.push({std::move(packet), flag});
+void NetClient::push_outgoing_packet(Message message) {
+
+    outgoing_messages.push(std::move(message));
 }
 
 int NetClient::send_packet_queue() {
-    int n_sent = outgoing_packets.size();
-    while (outgoing_packets.size()) {
-        auto packet_flag = outgoing_packets.front();
-        std::unique_ptr<PacketBase> packet = packet_flag.first;
-        ENetPacketFlag flag = packet_flag.second;
-        outgoing_packets.pop();
+    int n_sent = outgoing_messages.size();
+    while (outgoing_messages.size()) {
+        auto message = std::move(outgoing_messages.front());
+
+        std::unique_ptr<PacketBase> packet = std::move(message.packet);
+        uint8_t channel = static_cast<uint8_t>(message.header.flag);
+        outgoing_messages.pop();
         auto bytes = packet->serialize();
-        sendPackets(&bytes, 0, flag);
+        sendPackets(bytes, channel);
     }
     return n_sent;
 }

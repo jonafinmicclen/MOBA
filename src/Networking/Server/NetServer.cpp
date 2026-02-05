@@ -36,24 +36,38 @@ void NetServer::pollEvents() {
     {
         switch (event.type)
         {
-        case ENET_EVENT_TYPE_CONNECT:
-            initialiseClientConnection(event.peer);
-            break;
-    
-        case ENET_EVENT_TYPE_RECEIVE:
-
-            if (event.packet) {
-                auto new_packet = PacketFactory::deserialisePacket(event.packet->data, event.packet->dataLength);
-                packet_queue.push(std::move(new_packet));
-            }   
-
-            enet_packet_destroy (event.packet);
-            break;
+            case ENET_EVENT_TYPE_CONNECT:
+                initialiseClientConnection(event.peer);
+                break;
         
-        case ENET_EVENT_TYPE_DISCONNECT:
-            std::cout<<std::format("{} disconected.\n", event.peer->data);
-            event.peer -> data = nullptr;
+            case ENET_EVENT_TYPE_RECEIVE:
+                handleRecieve(event);
+                break;
+            
+            case ENET_EVENT_TYPE_DISCONNECT:
+                std::cout<<std::format("{} disconected.\n", event.peer->data);
+                event.peer -> data = nullptr;
+            }
+    }
+}
+
+void NetServer::handleRecieve(ENetEvent event) {
+    if (event.packet) {
+        auto new_packet = PacketFactory::deserialisePacket(event.packet->data, event.packet->dataLength);
+        switch (event.channelID) {
+            case 0: // Movement
+                movement_queue.push(std::move(new_packet));
+                break;
+
+            case 1: // Gameplay
+                gameplay_queue.push(std::move(new_packet));
+                break;
+
+            case 2: // Chat
+                chat_queue.push(std::move(new_packet));
+                break;
         }
+        enet_packet_destroy (event.packet);
     }
 }
 
@@ -82,13 +96,34 @@ void NetServer::sendPackets(const std::vector<uint8_t>& packet_content, ENetPeer
 }
 
 void NetServer::initialiseClientConnection(ENetPeer* peer) {
-    auto peerData = std::make_shared<PeerData>(next_client_id++, peer);
+    auto peerData = std::make_shared<PeerData>(peer);
     connected_clients.push_back(peerData);
 }
 
-std::unique_ptr<PacketBase> NetServer::popPacketQueue() {
-    if (packet_queue.empty()) return nullptr;
-    std::unique_ptr<PacketBase> packet = std::move(packet_queue.front());
-    packet_queue.pop();
+std::unique_ptr<PacketBase> NetServer::popPacket(const PacketFlag flag) {
+    auto queue = getQueueFromFlag(flag);
+    if (!queue) {
+        DEBUG_LOG("No packets in queue");
+        return nullptr;
+    }
+    if (!queue->size()) {
+        return nullptr;
+    }
+    auto packet = std::move(queue->front());
+    queue->pop();
     return packet;
+}
+
+std::queue<std::unique_ptr<PacketBase>>* NetServer::getQueueFromFlag(const PacketFlag flag) {
+    switch (flag) {
+        case PacketFlag::GAMEPLAY:
+            return &gameplay_queue;
+        case PacketFlag::MOVEMENT:
+            return &movement_queue;
+        case PacketFlag::CHAT:
+            return &chat_queue;
+        default:
+            DEBUG_LOG("Unrecognised flag");
+            return nullptr;
+    }
 }

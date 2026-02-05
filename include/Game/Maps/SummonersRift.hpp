@@ -9,3 +9,6 @@ class SummonersRift : public Map {
     public:
     std::string getName() override {return "Summoners Rift";}
 };
+
+// Header-only registration
+inline MapRegisterer<SummonersRift> regSummonersRift("Summoners Rift");

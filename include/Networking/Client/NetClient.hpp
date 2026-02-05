@@ -6,6 +6,8 @@
 
 #include "Networking/Packets/PacketFactory.hpp"
 #include "Networking/PeerData.hpp"
+#include "Networking/Message/Message.hpp"
+#include "Networking/Message/MessageHeader.hpp"
 
 #include <enet/enet.h>
 
@@ -22,11 +24,11 @@ public:
     NetClient(const char* server_add, int port);
     ~NetClient();
 
-    bool is_connected() {return peer.isConnected();}
+    bool is_connected() {return peer_data->isConnected();}
 
     void pollEvents();
     void connectServer();
-    void push_outgoing_packet(std::unique_ptr<PacketBase> packet, ENetPacketFlag flag);
+    void push_outgoing_packet(Message message);
     int send_packet_queue();
 
     std::unique_ptr<PacketBase> popPacketQueue();
@@ -34,10 +36,10 @@ public:
 
 private:
     void sendPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
-    void on_connection();
+    void on_connection(ENetPeer* peer);
 
     std::queue<std::unique_ptr<PacketBase>> packet_queue;
-    std::queue<std::pair<std::unique_ptr<PacketBase>, ENetPacketFlag>> outgoing_packets;
+    std::queue<Message> outgoing_messages;
 
     const char* server_address;
     int server_port;
@@ -45,5 +47,5 @@ private:
     ENetHost* client;
     ENetAddress address;
     ENetEvent event;
-    PeerData peer = PeerData();
+    std::unique_ptr<PeerData> peer_data;
 };

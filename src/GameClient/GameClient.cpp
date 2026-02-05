@@ -8,13 +8,15 @@ GameClient::GameClient() {
     cameraController = std::make_unique<CameraController>(camera.get());
     inputManager = std::make_unique<InputManager>();
     game = std::make_unique<Game>();
-    netClient = std::make_unique<NetClient>();
+    netClient = std::make_unique<NetClient>(std::string("localhost").c_str(), 8080);    // Hardcoded address
 
     exitListener = std::make_unique<ExitListener>(&running);
     inputManager->AddListener(exitListener.get());
 
     loadAssets();
     initialiseRenderer();    
+    auto map = MapFactory::instance().create("Summoners Rift");
+    DEBUG_LOG(map->getName());
 }
 
 void GameClient::loadAssets() {
@@ -70,8 +72,14 @@ void GameClient::init_server_connection() {
     while (!netClient->is_connected()) {
         netClient->connectServer();
     }
-    auto packet = JSONPacket();
-    packet.json_from_file("RuntimeData/auth_ctos.json");
-    netClient->push_outgoing_packet(packet, ENET_PACKET_FLAG_RELIABLE);
+    auto packet = std::make_unique<ClientAuthenticationPacket>();
+    packet->json_from_file("RuntimeData/auth_ctos.json");
+    Message message;
+    message.packet = std::move(packet);
+    message.header.flag = PacketFlag::GAMEPLAY;
+
+    netClient->push_outgoing_packet(std::move(message));
     netClient->send_packet_queue();
+
+    // Await initialisation listener
 }
