@@ -8,41 +8,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DDEBUG)
 endif()
 
+
 # Prefer GLVND over legacy OpenGL
 cmake_policy(SET CMP0072 NEW)
-
-# ----------------------------
-# Max optimisations (Release)
-# ----------------------------
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    # Reasonable warnings (optional but recommended)
-    add_compile_options(
-        -Wall -Wextra -Wpedantic
-        -Wno-unused-parameter
-    )
-
-    # Release-only "max" flags
-    add_compile_options(
-        $<$<CONFIG:Release>:-O3>
-        $<$<CONFIG:Release>:-DNDEBUG>
-        $<$<CONFIG:Release>:-march=native>
-        $<$<CONFIG:Release>:-ffunction-sections>
-        $<$<CONFIG:Release>:-fdata-sections>
-    )
-
-    add_link_options(
-        $<$<CONFIG:Release>:-Wl,--gc-sections>
-    )
-
-    # Enable LTO/IPO in Release if supported
-    include(CheckIPOSupported)
-    check_ipo_supported(RESULT lto_supported OUTPUT lto_error)
-    if(lto_supported)
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
-    else()
-        message(STATUS "IPO/LTO not supported: ${lto_error}")
-    endif()
-endif()
 
 # --- Find packages ---
 find_package(OpenGL REQUIRED)
@@ -50,6 +18,10 @@ find_package(SDL2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 # --- GLAD setup ---
+# Assumes:
+# include/glad/glad.h
+# include/KHR/khrplatform.h
+# src/glad.c
 set(GLAD_SOURCES src/glad.c)
 set(GLAD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
@@ -99,19 +71,21 @@ foreach(main_file ${MAIN_FILES})
 
     message(STATUS "Creating executable: ${name}")
 
-    add_executable(${name}
-        ${main_file}
-        ${SHARED_SOURCES}
-        ${GLAD_SOURCES}
+    add_executable(${name} 
+        ${main_file} 
+        ${SHARED_SOURCES} 
+        ${GLAD_SOURCES}  # compile glad.c
     )
 
+    # Apply include directories to executables
     target_include_directories(${name} PRIVATE ${PROJECT_INCLUDES})
 
+    # Link libraries
     target_link_libraries(${name}
         ServerLib
         ${OPENGL_LIBRARIES}
         ${SDL2_LIBRARIES}
         enet
-        dl
+        dl          # needed for GLAD dynamic loader on Linux
     )
 endforeach()

@@ -1,4 +1,7 @@
 {
-    "map": "Summoners Rift",
-    "characters": ["Naren"]
+  "map": "Summoners Rift",
+  "characters" : "Naren",
+  "players": {
+    "hash1": "Naren"
+  }
 }

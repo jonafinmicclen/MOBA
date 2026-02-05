@@ -8,6 +8,7 @@
 #include "Networking/PeerData.hpp"
 #include "Networking/Message/Message.hpp"
 #include "Networking/Message/MessageHeader.hpp"
+#include "Networking/Packets/PacketDistributor.hpp"
 
 #include <enet/enet.h>
 

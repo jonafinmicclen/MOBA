@@ -96,46 +96,6 @@ void Renderer::uploadAssetMesh(Asset* asset) {
     mesh_map[asset->name] = std::move(glMesh);
 }
 
-void Renderer::drawMesh(const std::string& mesh_name, const glm::mat4& model) {
-    GLMesh* mesh = mesh_map.at(mesh_name).get();
-    if (!mesh) return;
-
-    glBindVertexArray(mesh->vao);
-    glUseProgram(shaderProgram);
-
-    // Upload matrices
-    GLuint locModel = glGetUniformLocation(shaderProgram, "u_Model");
-    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
-
-    GLuint locView = glGetUniformLocation(shaderProgram, "u_View");
-    glUniformMatrix4fv(locView, 1, GL_FALSE, &view[0][0]);
-
-    GLuint locProj = glGetUniformLocation(shaderProgram, "u_Projection");
-    glUniformMatrix4fv(locProj, 1, GL_FALSE, &proj[0][0]);
-
-    // Draw per-texture
-    GLuint indexOffset = 0;
-    for (auto& kv : mesh->textureToFaceIndices) {
-        int texID = kv.first;
-        size_t count = kv.second.size();
-
-        // Bind texture
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mesh->textures[texID]);
-        GLuint locSampler = glGetUniformLocation(shaderProgram, "u_Texture");
-        glUniform1i(locSampler, 0);
-
-        // Draw only this batch
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(count),
-                       GL_UNSIGNED_INT, (void*)(indexOffset * sizeof(uint32_t)));
-
-        indexOffset += count;
-    }
-
-    glBindVertexArray(0);
-    glActiveTexture(GL_TEXTURE0);
-}
-
 
 
 Renderer::Renderer(int w, int h) {
@@ -186,10 +146,21 @@ Renderer::Renderer(int w, int h) {
 
     shaderProgram = createShaderProgram(vertCode.c_str(), fragCode.c_str());
 
+    glUseProgram(shaderProgram);
+    uModel = glGetUniformLocation(shaderProgram, "u_Model");
+    uView  = glGetUniformLocation(shaderProgram, "u_View");
+    uProj  = glGetUniformLocation(shaderProgram, "u_Projection");
+    uTex   = glGetUniformLocation(shaderProgram, "u_Texture");
+
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
     glEnable(GL_BLEND);
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -207,14 +178,45 @@ void Renderer::beginRender() {
 
     glUseProgram(shaderProgram);
 
-    GLuint locView = glGetUniformLocation(shaderProgram, "u_View");
-    glUniformMatrix4fv(locView, 1, GL_FALSE, &view[0][0]);
-
-    GLuint locProj = glGetUniformLocation(shaderProgram, "u_Projection");
-    glUniformMatrix4fv(locProj, 1, GL_FALSE, &proj[0][0]);
-
+    glUniformMatrix4fv(uView, 1, GL_FALSE, &view[0][0]);
+    glUniformMatrix4fv(uProj, 1, GL_FALSE, &proj[0][0]);
     
 }
+
+
+void Renderer::drawMesh(const std::string& mesh_name, const glm::mat4& model) {
+    GLMesh* mesh = mesh_map.at(mesh_name).get();
+    if (!mesh) return;
+
+    glBindVertexArray(mesh->vao);
+    glUseProgram(shaderProgram);
+
+    glUniformMatrix4fv(uModel, 1, GL_FALSE, &model[0][0]);
+
+    // Draw per-texture
+    GLuint indexOffset = 0;
+    for (auto& kv : mesh->textureToFaceIndices) {
+        int texID = kv.first;
+        size_t count = kv.second.size();
+
+        // Bind texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, mesh->textures[texID]);
+        
+        glUniform1i(uTex, 0);
+
+
+        // Draw only this batch
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(count),
+                       GL_UNSIGNED_INT, (void*)(indexOffset * sizeof(uint32_t)));
+
+        indexOffset += count;
+    }
+
+    glBindVertexArray(0);
+    glActiveTexture(GL_TEXTURE0);
+}
+
 
 void Renderer::endRender() {
     SDL_GL_SwapWindow(window);

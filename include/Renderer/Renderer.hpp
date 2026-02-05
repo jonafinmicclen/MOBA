@@ -50,6 +50,12 @@ private:
     glm::mat4 view;
     glm::mat4 proj;
 
+    GLint uModel = -1;
+    GLint uView  = -1;
+    GLint uProj  = -1;
+    GLint uTex   = -1;
+
+
     int width, height;
 
 };

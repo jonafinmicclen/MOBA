@@ -16,6 +16,7 @@ GameClient::GameClient() {
     loadAssets();
     initialiseRenderer();    
     auto map = MapFactory::instance().create("Summoners Rift");
+    std::cout<<map->getName()<<std::endl;
     DEBUG_LOG(map->getName());
 }
 

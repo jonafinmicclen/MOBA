@@ -22,7 +22,7 @@ NetClient::~NetClient() {
 }
 
 void NetClient::pollEvents() {
-    if (enet_host_service (client, &event, 0) > 0)
+    while (enet_host_service (client, &event, 0) > 0)
     {
         switch (event.type)
         {
