@@ -5,6 +5,8 @@
 #include "Networking/Packets/PacketBase.hpp"
 
 #include "Networking/Packets/PacketFactory.hpp"
+#include "Networking/Packets/TestPacket.hpp"
+#include "Networking/PeerData.hpp"
 
 #include <enet/enet.h>
 
@@ -25,15 +27,17 @@ class NetServer {
     void sendPackets(const std::vector<uint8_t>& packet_content, ENetPeer* target_peer, const enet_uint8 channel, ENetPacketFlag const flag = ENET_PACKET_FLAG_RELIABLE);
     void broadcastPackets(const std::vector<uint8_t>& packet_content, const enet_uint8 channel, const ENetPacketFlag flag = ENET_PACKET_FLAG_RELIABLE);
 
-
-    PacketBase* popQueue();
+    std::unique_ptr<PacketBase> popPacketQueue();
 
 
     private:
 
-    std::vector<ENetPeer*> connected_clients;
+    std::vector<std::shared_ptr<PeerData>> connected_clients;
+
     uint8_t next_client_id = 0;
-    std::queue<PacketBase*> packet_queue;
+
+
+    std::queue<std::unique_ptr<PacketBase>> packet_queue;
 
     ENetAddress address;
     ENetHost* server;
@@ -41,5 +45,5 @@ class NetServer {
 
     const int max_clients;
 
-    void initialiseClientConnection();
+    void initialiseClientConnection(ENetPeer* peer);
 };

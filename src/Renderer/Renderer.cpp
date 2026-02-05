@@ -138,14 +138,12 @@ void Renderer::drawMesh(const std::string& mesh_name, const glm::mat4& model) {
 
 
 
-Renderer::Renderer(ResourceManager* resManager, int w, int h) {
+Renderer::Renderer(int w, int h) {
 
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); // 24-bit depth buffer
 
     width = w;
     height = h;
-
-    resourceManager = resManager;
 
         // -- SDL2 + OpenGL Window ---
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {

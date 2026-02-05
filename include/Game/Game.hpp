@@ -3,15 +3,21 @@
 #include <memory>
 #include <vector>
 
-#include "Game/AssetState.hpp"
+#include "Game/ObjectState.hpp"
+#include "Game/Maps/Map.hpp"
 #include "Game/Entities/Entitiy.hpp"
 
+#include "Game/Maps/MapFactory.hpp"
+
 class Game {
-private:
-    std::vector<Entity> entities;
 public:
     Game();
     void update();
+    void setMap(const std::string name);
 
-    std::vector<const AssetState*> getState();
+    std::vector<const ObjectState*> getStates();
+private:
+    std::vector<Entity> entities;
+
+    std::unique_ptr<Map> map;
 };

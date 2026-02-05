@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "Game/AssetState.hpp"
+#include "Game/ObjectState.hpp"
 
 class Entity {
     public:
-    virtual AssetState* getState();
+    virtual ObjectState* getState();
 };

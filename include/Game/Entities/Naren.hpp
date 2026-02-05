@@ -4,8 +4,8 @@
 
 class Naren : Entity {
     public:
-    AssetState* getState() override { return &state; }
+    ObjectState* getState() override { return &state; }
 
     private:
-    AssetState state;
+    ObjectState state;
 };

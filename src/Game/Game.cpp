@@ -4,11 +4,15 @@ Game::Game() {
 
 }
 
+void Game::setMap(std::string name) {
+    map = MapFactory::instance().create(name);
+}
+
 void Game::update() {
 }
 
-std::vector<const AssetState*> Game::getState() {
-    std::vector<const AssetState*> states;
+std::vector<const ObjectState*> Game::getStates() {
+    std::vector<const ObjectState*> states;
     states.reserve(entities.size());
     for (auto& entity : entities) {
         states.push_back(entity.getState());

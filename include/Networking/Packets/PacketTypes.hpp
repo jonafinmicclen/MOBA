@@ -3,5 +3,6 @@
 #include <cstdint>
 
 enum class PacketType : uint8_t {
-    TestPacket = 0
+    Test_Packet = 0,
+    JSON_Packet = 1
 };

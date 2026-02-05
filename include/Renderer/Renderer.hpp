@@ -16,7 +16,7 @@
 
 class Renderer {
 public:
-    Renderer(ResourceManager* resManager, const int width, const int height);
+    Renderer(const int width, const int height);
     ~Renderer();
 
     void beginRender();
@@ -41,7 +41,7 @@ private:
 
     Camera* camera;
 
-    ResourceManager* resourceManager;
+    ResourceManager& resourceManager = ResourceManager::instance();
     SDL_Window* window;
     SDL_GLContext glContext;
     std::unordered_map<std::string, std::unique_ptr<GLMesh>> mesh_map;

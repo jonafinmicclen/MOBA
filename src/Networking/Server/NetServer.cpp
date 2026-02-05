@@ -37,13 +37,14 @@ void NetServer::pollEvents() {
         switch (event.type)
         {
         case ENET_EVENT_TYPE_CONNECT:
+            initialiseClientConnection(event.peer);
             break;
     
         case ENET_EVENT_TYPE_RECEIVE:
 
             if (event.packet) {
-                auto new_packet = PacketFactory::packetFromBytes(event.packet->data, event.packet->dataLength);
-                packet_queue.push(new_packet);
+                auto new_packet = PacketFactory::deserialisePacket(event.packet->data, event.packet->dataLength);
+                packet_queue.push(std::move(new_packet));
             }   
 
             enet_packet_destroy (event.packet);
@@ -80,13 +81,14 @@ void NetServer::sendPackets(const std::vector<uint8_t>& packet_content, ENetPeer
     enet_host_flush(server);
 }
 
-void NetServer::initialiseClientConnection() {
-    // Send client id to client connected.
+void NetServer::initialiseClientConnection(ENetPeer* peer) {
+    auto peerData = std::make_shared<PeerData>(next_client_id++, peer);
+    connected_clients.push_back(peerData);
 }
 
-PacketBase* NetServer::popQueue() {
+std::unique_ptr<PacketBase> NetServer::popPacketQueue() {
     if (packet_queue.empty()) return nullptr;
-    PacketBase* packet = std::move(packet_queue.front());
+    std::unique_ptr<PacketBase> packet = std::move(packet_queue.front());
     packet_queue.pop();
     return packet;
 }

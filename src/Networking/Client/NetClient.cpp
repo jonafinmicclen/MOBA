@@ -17,7 +17,9 @@ NetClient::NetClient(const char* server_add, int port) {
 }
 
 NetClient::~NetClient() {
-    enet_host_destroy(client);
+    if (client) {
+        enet_host_destroy(client);
+    }
 }
 
 void NetClient::pollEvents() {
@@ -32,8 +34,8 @@ void NetClient::pollEvents() {
         case ENET_EVENT_TYPE_RECEIVE:
 
             if (event.packet) {
-                auto new_packet = PacketFactory::packetFromBytes(event.packet->data, event.packet->dataLength);
-                packet_queue.push(new_packet);
+                auto new_packet = PacketFactory::deserialisePacket(event.packet->data, event.packet->dataLength);
+                packet_queue.push(std::move(new_packet));
             }   
 
             enet_packet_destroy (event.packet);
@@ -51,7 +53,7 @@ void NetClient::connectServer() {
     enet_address_set_host (& address, server_address);
     address.port = server_port;
     
-    peer = enet_host_connect (client, & address, 2, 0);    
+    peer = enet_host_connect(client, & address, 2, 0);    
     
     if (peer == nullptr) {
         std::cout<<"No available peers for initiating an ENet connection.\n";
@@ -83,9 +85,9 @@ void NetClient::sendPackets(const std::vector<uint8_t>& packet_content, const en
     enet_host_flush(client);
 }
 
-PacketBase* NetClient::popQueue() {
+std::unique_ptr<PacketBase> NetClient::popPacketQueue() {
     if (packet_queue.empty()) return nullptr;
-    PacketBase* packet = std::move(packet_queue.front());
+    auto packet = std::move(packet_queue.front());
     packet_queue.pop();
     return packet;
 }
