@@ -33,5 +33,5 @@ class Server {
     std::unique_ptr<ResourceManager> resourceManager;
     std::unique_ptr<PacketDistributor> packetDistributor;
 
-    bool running;
+    bool running = false;
 };

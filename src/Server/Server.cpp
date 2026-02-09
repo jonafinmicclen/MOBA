@@ -18,13 +18,11 @@ void Server::parseGameArgsJSON() {
     game->setMap(game_args["map"]);
     resourceManager->loadAsset(game_args["map"]);
 
-    for (auto character : game_args["characters"]) {
-        resourceManager->loadAsset(character);
-    }
     for (auto& [hash, character] : game_args["players"].items()) {
-        std::string playerHash = hash;                  // "hash1"
-        std::string characterName = character.get<std::string>(); // "Naren"
+        std::string playerHash = hash;
+        std::string characterName = character.get<std::string>();
         player_hash_character_name[playerHash] = characterName;
+        resourceManager->loadAsset(characterName);
     }
 }
 

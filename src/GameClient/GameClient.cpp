@@ -74,7 +74,10 @@ void GameClient::init_server_connection() {
         netClient->connectServer();
     }
     auto packet = std::make_unique<ClientAuthenticationPacket>();
+
+    // Locally saved authentication packet
     packet->json_from_file("RuntimeData/auth_ctos.json");
+
     Message message;
     message.packet = std::move(packet);
     message.header.flag = PacketFlag::GAMEPLAY;
@@ -82,5 +85,4 @@ void GameClient::init_server_connection() {
     netClient->push_outgoing_packet(std::move(message));
     netClient->send_packet_queue();
 
-    // Await initialisation listener
 }
