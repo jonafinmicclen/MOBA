@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include "Debug/debug.hpp"
+
 #include "Game/ObjectState.hpp"
 #include "Game/Maps/Map.hpp"
 #include "Game/Entities/Entitiy.hpp"
@@ -14,6 +16,7 @@ public:
     Game();
     void update();
     void setMap(const std::string name);
+    Map& getMap();
 
     std::vector<const ObjectState*> getStates();
 private:

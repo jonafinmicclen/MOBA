@@ -1,3 +1,6 @@
-#include "tests/InputListenerTest.hpp"
+#include "Server/Server.hpp"
 
-int main(){}
+int main() {
+    Server* server = new Server();
+    server->simulate();
+}

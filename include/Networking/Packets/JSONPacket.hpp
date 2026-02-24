@@ -5,6 +5,7 @@
 #include <fstream>
 #include "Debug/debug.hpp"
 
+#include <optional>
 #include <nlohmann/json.hpp>
 
 
@@ -43,6 +44,21 @@ class JSONPacket : public AutoRegisterPacket<JSONPacket, PacketType::JSON_Packet
         } catch (const json::parse_error& e) {
             DEBUG_LOG("JSON parse error in file " << path << ": " << e.what());
         }
+    }
+
+    const json& get_json() const {
+        return json_data;
+    }
+
+    void set_json(json& data) {
+        json_data = data;
+    }
+
+    std::optional<const std::string> get_hash() const {
+        if (json_data.contains("hash") && json_data["hash"].is_string()) {
+            return json_data["hash"].get<std::string>();
+        }
+        return std::nullopt;
     }
 
     private:

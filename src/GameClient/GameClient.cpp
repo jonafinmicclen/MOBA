@@ -8,31 +8,36 @@ GameClient::GameClient() {
     cameraController = std::make_unique<CameraController>(camera.get());
     inputManager = std::make_unique<InputManager>();
     game = std::make_unique<Game>();
-    netClient = std::make_unique<NetClient>(std::string("localhost").c_str(), 8080);    // Hardcoded address
+
+    std::string server_address = "localhost";
+    netClient = std::make_unique<NetClient>(server_address.c_str(), 8080);    // Hardcoded address
 
     exitListener = std::make_unique<ExitListener>(&running);
     inputManager->AddListener(exitListener.get());
 
-    loadAssets();
     initialiseRenderer();    
-    auto map = MapFactory::instance().create("Summoners Rift");
-    std::cout<<map->getName()<<std::endl;
-    DEBUG_LOG(map->getName());
+
+    init_server_connection();    
 }
 
-void GameClient::loadAssets() {
-    // Hard coded launch parameters, will later be argc ... of --characers ....
-    // Only one character for now but obviousl more later
-    // Actually this should be recieved from server and not locally
-    characterArgs = {"Naren", "Map", "Summoners Rift"};
+void GameClient::loadAssets(const json& game_args) {
 
-    // this may be re-used once args are passed into charargs
-    for (auto& chararg : characterArgs) {
+    // Load map
+    resourceManager.loadAsset(game_args["map"]);
+    game->setMap(game_args["map"]);
+
+    // Load player character
+    resourceManager.loadAsset(game_args["active_character"]);
+
+    // Load everything else
+    for (auto& asset : game_args["other_assets"]) {
         // Load in res manager
-        auto path = assetDatabase.Get(chararg).asset_path;
-        resourceManager.loadAsset(path, chararg);
+        auto path = assetDatabase.Get(asset).asset_path;
+        resourceManager.loadAsset(path, asset);
 
     }
+
+
 
 }
 
@@ -64,6 +69,7 @@ void GameClient::Run() {
 
         cameraController->update(window_width, window_height);
         inputManager->Update();
+        netClient->pollEvents();
         Render();
 
     }
@@ -73,16 +79,47 @@ void GameClient::init_server_connection() {
     while (!netClient->is_connected()) {
         netClient->connectServer();
     }
+    DEBUG_LOG("Connected with server");
+
     auto packet = std::make_unique<ClientAuthenticationPacket>();
 
     // Locally saved authentication packet
     packet->json_from_file("RuntimeData/auth_ctos.json");
 
+    // Construct message for authentication.
     Message message;
     message.packet = std::move(packet);
     message.header.flag = PacketFlag::GAMEPLAY;
 
-    netClient->push_outgoing_packet(std::move(message));
+    DEBUG_LOG("Sending auth packet");
+
+    netClient->push_outgoing_packet(message);
     netClient->send_packet_queue();
 
+    DEBUG_LOG("Clearing packets until GAME_ARGS_PACKET");
+    for (;;) {
+        netClient->pollEvents();
+        auto packet = netClient->popPacketQueue();
+
+        if (packet)  {
+            DEBUG_LOG("Dispatching packet");
+            packetDistributor.dispatch(packet, 0);
+            break;
+        }
+    }
+
+}
+
+
+void GameClient::processGameArgsPacket(const GameArgsPacket& pkt) {
+    loadAssets(pkt.get_json());
+}
+
+void GameClient::initialisePacketDistributors() {
+    packetDistributor.on<GameArgsPacket>(
+        PacketType::GAME_ARGS_PACKET, 
+        [this](const GameArgsPacket& pkt, const uint8_t id) {
+            processGameArgsPacket(pkt);
+        }
+    );
 }

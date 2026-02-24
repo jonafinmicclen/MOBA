@@ -7,6 +7,10 @@
 
 template<typename Derived, PacketType Type>
 class AutoRegisterPacket : public virtual PacketBase {
+public:
+    static void ensureRegistered() {
+        (void)registered;
+    }
 private:
     static inline bool registered = [] {
         PacketFactory::registerPacket(

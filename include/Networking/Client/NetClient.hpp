@@ -25,11 +25,14 @@ public:
     NetClient(const char* server_add, int port);
     ~NetClient();
 
-    bool is_connected() {return peer_data->isConnected();}
+    bool is_connected() {
+        if (!peer_data) return false;
+        return peer_data->isConnected();
+    }
 
     void pollEvents();
     void connectServer();
-    void push_outgoing_packet(Message message);
+    void push_outgoing_packet(Message& message);
     int send_packet_queue();
 
     std::unique_ptr<PacketBase> popPacketQueue();

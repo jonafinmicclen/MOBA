@@ -54,20 +54,33 @@ void NetServer::pollEvents() {
 void NetServer::handleRecieve(ENetEvent event) {
     if (event.packet) {
         auto new_packet = PacketFactory::deserialisePacket(event.packet->data, event.packet->dataLength);
-        switch (event.channelID) {
-            case 0: // Movement
-                movement_queue.push(std::move(new_packet));
+        
+        // Construct container
+        auto message = std::make_unique<Message>();
+        message->packet = std::move(new_packet);
+
+        uint8_t id = id_by_peerptr.at(event.peer);
+        message->header.id = id;
+
+        enet_packet_destroy (event.packet);
+
+        DEBUG_LOG("Packet stored to queue " << static_cast<int>(event.channelID));
+        
+        switch (static_cast<int>(event.channelID)) {
+            case 1: // Movement
+                movement_queue.push(std::move(message));
                 break;
 
-            case 1: // Gameplay
-                gameplay_queue.push(std::move(new_packet));
+            case 0: // Gameplay
+                gameplay_queue.push(std::move(message));
                 break;
 
             case 2: // Chat
-                chat_queue.push(std::move(new_packet));
+                chat_queue.push(std::move(message));
                 break;
+            default:
+                DEBUG_LOG("Packed channelid missed");
         }
-        enet_packet_destroy (event.packet);
     }
 }
 
@@ -95,12 +108,21 @@ void NetServer::sendPackets(const std::vector<uint8_t>& packet_content, ENetPeer
     enet_host_flush(server);
 }
 
+void NetServer::sendPackets(const PacketBase* packet, const uint8_t peer_id, const enet_uint8 channel, ENetPacketFlag const flag) {
+    ENetPeer* peer = peerptr_by_id[peer_id];
+    std::vector<uint8_t> packet_content = packet->serialize();
+    sendPackets(packet_content, peer, channel, flag);
+}
+
 void NetServer::initialiseClientConnection(ENetPeer* peer) {
     auto peerData = std::make_shared<PeerData>(peer);
     connected_clients.push_back(peerData);
+    peerptr_by_id[next_id] = peer;
+    id_by_peerptr[peer] = next_id++;
+    DEBUG_LOG("connection " << id_by_peerptr[peer] << "established");
 }
 
-std::unique_ptr<PacketBase> NetServer::popPacket(const PacketFlag flag) {
+std::unique_ptr<Message> NetServer::popPacket(const PacketFlag flag) {
     auto queue = getQueueFromFlag(flag);
     if (!queue) {
         DEBUG_LOG("No packets in queue");
@@ -114,7 +136,7 @@ std::unique_ptr<PacketBase> NetServer::popPacket(const PacketFlag flag) {
     return packet;
 }
 
-std::queue<std::unique_ptr<PacketBase>>* NetServer::getQueueFromFlag(const PacketFlag flag) {
+std::queue<std::unique_ptr<Message>>* NetServer::getQueueFromFlag(const PacketFlag flag) {
     switch (flag) {
         case PacketFlag::GAMEPLAY:
             return &gameplay_queue;
@@ -126,4 +148,9 @@ std::queue<std::unique_ptr<PacketBase>>* NetServer::getQueueFromFlag(const Packe
             DEBUG_LOG("Unrecognised flag");
             return nullptr;
     }
+}
+
+void NetServer::disconnectByID(uint8_t id) {
+    DEBUG_LOG("Unimplemented");
+    return;
 }

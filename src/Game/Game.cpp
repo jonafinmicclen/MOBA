@@ -6,6 +6,11 @@ Game::Game() {
 
 void Game::setMap(std::string name) {
     map = MapFactory::instance().create(name);
+    DEBUG_LOG(map->getName());
+}
+
+Map& Game::getMap() {
+    return *map;
 }
 
 void Game::update() {

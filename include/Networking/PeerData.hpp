@@ -17,7 +17,7 @@ class PeerData {
         }
         return enetpeer;
     }
-    const bool isConnected() const {
+    bool isConnected() const {
         if (!enetpeer) {
             DEBUG_LOG("Connection query on null peer");
             return false;

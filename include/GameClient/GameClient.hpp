@@ -26,7 +26,9 @@
 
 #include "Networking/Client/NetClient.hpp"
 #include "Networking/Message/Message.hpp"
+#include "Networking/Packets/PacketDistributor.hpp"
 #include "GameClient/Packets/ClientAuthenticationPacket.hpp"
+#include "GameClient/Packets/GameArgsPacket.hpp"
 
 
 class GameClient {
@@ -48,14 +50,20 @@ private:
     AssetDatabase& assetDatabase = AssetDatabase::instance();
     ResourceManager& resourceManager = ResourceManager::instance();
 
+    PacketDistributor packetDistributor;
+
     std::vector<std::string> characterArgs;
 
     glm::vec3 translation = {0.0f, 0.0f, 0.0f};
 
     void initialiseRenderer();
-    void loadAssets();
+    void loadAssets(const json& game_args);
     void Render();
     void init_server_connection();
+
+    void processGameArgsPacket(const GameArgsPacket& pkt);
+
+    void initialisePacketDistributors();
 
     int window_width = 1920;
     int window_height = 1080;

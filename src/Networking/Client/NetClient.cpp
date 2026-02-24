@@ -31,8 +31,8 @@ void NetClient::pollEvents() {
             break;
     
         case ENET_EVENT_TYPE_RECEIVE:
-
             if (event.packet) {
+                DEBUG_LOG("Packet recieved");
                 auto new_packet = PacketFactory::deserialisePacket(event.packet->data, event.packet->dataLength);
                 packet_queue.push(std::move(new_packet));
             }   
@@ -97,7 +97,7 @@ void NetClient::on_connection(ENetPeer* peer) {
     peer_data->setID("Server");
 }
 
-void NetClient::push_outgoing_packet(Message message) {
+void NetClient::push_outgoing_packet(Message& message) {
 
     outgoing_messages.push(std::move(message));
 }
@@ -105,8 +105,8 @@ void NetClient::push_outgoing_packet(Message message) {
 int NetClient::send_packet_queue() {
     int n_sent = outgoing_messages.size();
     while (outgoing_messages.size()) {
+        DEBUG_LOG("Sending packet in queue");
         auto message = std::move(outgoing_messages.front());
-
         std::unique_ptr<PacketBase> packet = std::move(message.packet);
         uint8_t channel = static_cast<uint8_t>(message.header.flag);
         outgoing_messages.pop();
