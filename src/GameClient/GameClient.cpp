@@ -15,7 +15,14 @@ GameClient::GameClient() {
     exitListener = std::make_unique<ExitListener>(&running);
     inputManager->AddListener(exitListener.get());
 
+    AutoRegisterPacket<
+        GameArgsPacket,
+        PacketType::GAME_ARGS_PACKET
+    >::register_pkt();
+
     initialiseRenderer();    
+
+    initialisePacketDistributors();
 
     init_server_connection();    
 }

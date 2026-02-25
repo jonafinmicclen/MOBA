@@ -1,6 +1,7 @@
 #include "Server/Server.hpp"
 
 void Server::initialise() {
+    DEBUG_LOG("INITIALISATION PHAZE");
     netServer = std::make_unique<NetServer>(10);    // Max clients 10
     game = std::make_unique<Game>();
     ResourceManager::instance();
@@ -8,7 +9,7 @@ void Server::initialise() {
     AutoRegisterPacket<
         ClientAuthenticationPacket,
         PacketType::CLIENT_AUTH_PACKET
-    >::ensureRegistered();
+    >::register_pkt();
     DEBUG_LOG("Initialising packet listeners");
     initialise_packet_listeners();
     DEBUG_LOG("Parsing game args");
@@ -35,6 +36,7 @@ void Server::parseGameArgsJSON() {
 void Server::beginSimulation() {
     initialise();
     running = true;
+    DEBUG_LOG("Starting -- MAIN PHAZE");
     while (running) {
         netServer->pollEvents();
 
@@ -52,7 +54,7 @@ void Server::beginSimulation() {
             DEBUG_LOG("Distributing packet" << (uint8_t)message->packet->getType());
 
             bool status = packetDistributor->dispatch(message->packet, *message->header.id);
-            DEBUG_LOG("dispatch status: " << status);
+            DEBUG_LOG("dispatch status: " << (status ? "SUCCESS" : "FAIL"));
             // message now out of scope forever
             // probably fine just a reminder
         }

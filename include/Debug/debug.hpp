@@ -28,7 +28,7 @@
     }
 
     #define DEBUG_LOG(x) \
-        std::cout << "[" << extractClassMethod(FUNC_SIG) << "] " << x << std::endl
+        std::cout << "[" << FUNC_SIG << "] " << x << std::endl
 
 #else
     #define DEBUG_LOG(x) do {} while(0)

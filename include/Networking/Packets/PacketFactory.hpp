@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Debug/debug.hpp"
+
 #include "Networking/Packets/PacketBase.hpp"
 #include <unordered_map>
 #include <functional>
@@ -22,6 +24,7 @@ public:
             packet->deserialize(bytes + 1, size - 1);
             return packet;
         }
+        DEBUG_LOG("failed to create packet, type: " << (int)type);
         return nullptr;
     }
 

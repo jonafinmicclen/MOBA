@@ -20,7 +20,7 @@ public:
         return PacketType::Test_Packet;
     }
 
-    std::vector<uint8_t> serialize() const override {
+    std::vector<uint8_t> serialize_() const override {
         std::vector<uint8_t> data;
         data.push_back(static_cast<uint8_t>(getType()));
 

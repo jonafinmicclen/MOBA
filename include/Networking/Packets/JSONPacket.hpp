@@ -22,7 +22,7 @@ class JSONPacket : public AutoRegisterPacket<JSONPacket, PacketType::JSON_Packet
         json_data = json::parse(s);
     }
 
-    std::vector<uint8_t> serialize() const {
+    std::vector<uint8_t> serialize_() const {
         std::string d = json_data.dump();
         std::vector<uint8_t> bytes(d.begin(), d.end());
         return bytes;
@@ -54,13 +54,8 @@ class JSONPacket : public AutoRegisterPacket<JSONPacket, PacketType::JSON_Packet
         json_data = data;
     }
 
-    std::optional<const std::string> get_hash() const {
-        if (json_data.contains("hash") && json_data["hash"].is_string()) {
-            return json_data["hash"].get<std::string>();
-        }
-        return std::nullopt;
-    }
 
-    private:
+
+    protected:
     json json_data;
 };
