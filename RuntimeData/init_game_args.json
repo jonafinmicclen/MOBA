@@ -1,5 +1,5 @@
 {
     "active_character" : "Naren",
     "map" : "Summoners Rift",
-    "all_assets" : []
+    "all_assets" : ["Naren", "Summoners Rift"]
 }

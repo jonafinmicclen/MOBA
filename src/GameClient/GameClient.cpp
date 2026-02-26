@@ -29,21 +29,32 @@ GameClient::GameClient() {
 
 void GameClient::loadAssets(const json& game_args) {
 
-    // Load map
-    resourceManager.loadAsset(game_args["map"]);
-    game->setMap(game_args["map"]);
-
-    // Load player character
-    resourceManager.loadAsset(game_args["active_character"]);
-
-    // Load everything else
-    for (auto& asset : game_args["other_assets"]) {
-        // Load in res manager
-        auto path = assetDatabase.Get(asset).asset_path;
-        resourceManager.loadAsset(path, asset);
-
+    // Validate the stuff is there
+    auto required_args = {"map", "active_character", "all_assets"};
+    for (auto& arg : required_args) {
+        if (!game_args.contains(arg)) {
+            DEBUG_LOG("required arg " << arg << " was missing from args recieved from server");
+        }
     }
 
+    // Load everything
+    for (auto& asset_name : game_args["all_assets"]) {
+        // Load in res manager
+        auto path = assetDatabase.Get(asset_name).asset_path;
+        resourceManager.loadAsset(path, asset_name);
+        Asset* asset = resourceManager.getAsset(asset_name);
+        renderer->uploadAssetMesh(asset);
+        DEBUG_LOG("loading " << asset_name);
+    }
+
+    // Load map
+    auto& map = game_args["map"];
+    game->setMap(map);
+
+    // Load player character
+    auto& active_character = game_args["active_character"];
+    // save this somewhere idk where yet
+    // maybe assign to player controller or something or maybe it should go somewhere else
 
 
 }
@@ -51,12 +62,6 @@ void GameClient::loadAssets(const json& game_args) {
 void GameClient::initialiseRenderer() {
     renderer = std::make_unique<Renderer>(window_width, window_height);
     renderer->setCamera(camera.get());
-
-    for (auto& chararg : characterArgs) {
-        // Upload to renderer
-        Asset* asset = resourceManager.getAsset(chararg);
-        renderer->uploadAssetMesh(asset); // only upload once
-    }
 }
 
 void GameClient::Render() {

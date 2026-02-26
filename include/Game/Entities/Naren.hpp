@@ -2,10 +2,7 @@
 
 #include "Game/Entities/Entitiy.hpp"
 
-class Naren : Entity {
+class Naren : public Entity {
     public:
-    ObjectState* getState() override { return &state; }
-
-    private:
-    ObjectState state;
+    ObjectState& getState() override { return state; }
 };

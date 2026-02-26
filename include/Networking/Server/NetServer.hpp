@@ -1,6 +1,8 @@
 // NetServer.hpp
 #pragma once
 
+#include "Threading/ThreadSafeQueue.hpp"
+
 #include "Networking/NetworkConstants.hpp"
 #include "Networking/Packets/PacketBase.hpp"
 
@@ -35,8 +37,10 @@ class NetServer {
 
     std::unique_ptr<Message> popPacket(const PacketFlag flag);
 
-
     private:
+
+    void pushPacket(const PacketFlag flag);
+
     static constexpr uint8_t FLAG_TO_CHANNEL(PacketFlag flag) {
         switch(flag) {
             case PacketFlag::GAMEPLAY: return 0;
@@ -51,8 +55,11 @@ class NetServer {
     uint8_t next_id = 0;
 
     std::queue<std::unique_ptr<Message>> gameplay_queue;
+    std::mutex gameplay_queue_mutex;
     std::queue<std::unique_ptr<Message>> movement_queue;
+    std::mutex movement_queue_mutex;
     std::queue<std::unique_ptr<Message>> chat_queue;
+    std::mutex chat_queue_mutex;
 
     ENetAddress address;
     ENetHost* server;

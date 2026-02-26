@@ -15,12 +15,15 @@ class Game {
 public:
     Game();
     void update();
+    
     void setMap(const std::string name);
     Map& getMap();
 
+    void addEntity(std::unique_ptr<Entity>);
+
     std::vector<const ObjectState*> getStates();
 private:
-    std::vector<Entity> entities;
+    std::vector<std::unique_ptr<Entity>> entities;
 
     std::unique_ptr<Map> map;
 };

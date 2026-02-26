@@ -20,7 +20,11 @@ std::vector<const ObjectState*> Game::getStates() {
     std::vector<const ObjectState*> states;
     states.reserve(entities.size());
     for (auto& entity : entities) {
-        states.push_back(entity.getState());
+        states.push_back(&entity->getState());
     }
     return states;
+}
+
+void Game::addEntity(std::unique_ptr<Entity> entity) {
+    entities.push_back(std::move(entity));
 }

@@ -32,6 +32,10 @@ class Server {
     void parseGameArgsJSON(); // Load from JSON
     void beginSimulation();
 
+    void loadAssetByName(std::string);
+
+    void distributePackets();
+
     void authenticate_client(const ClientAuthenticationPacket& pkt, const uint8_t id);
     void initialise_client(const std::string user_id, const uint8_t client_id);
 
