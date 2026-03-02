@@ -4,6 +4,7 @@ project(MOBA)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Define DEBUG in Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DDEBUG)
 endif()
@@ -12,10 +13,10 @@ endif()
 cmake_policy(SET CMP0072 NEW)
 
 # ----------------------------
-# Max optimisations (Release)
+# Compiler flags
 # ----------------------------
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    # Reasonable warnings (optional but recommended)
+    # Warnings (project-wide)
     add_compile_options(
         -Wall -Wextra -Wpedantic
         -Wno-unused-parameter
@@ -44,55 +45,60 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     endif()
 endif()
 
-# --- Find packages ---
+# ----------------------------
+# Find packages
+# ----------------------------
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-# --- GLAD setup ---
-set(GLAD_SOURCES src/glad.c)
-set(GLAD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
-
-# --- Collect include directories ---
+# ----------------------------
+# Include directories
+# ----------------------------
 set(PROJECT_INCLUDES
     ${OPENGL_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/external
-    ${GLAD_INCLUDE_DIR}
 )
 
-# --- Collect all source files ---
+# ----------------------------
+# GLAD (build as its own library + suppress pedantic warnings there)
+# ----------------------------
+add_library(glad STATIC ${PROJECT_SOURCE_DIR}/src/glad.c)
+
+# If your glad headers are in ${PROJECT_SOURCE_DIR}/include, this is correct.
+# If they are elsewhere, add that path here too.
+target_include_directories(glad PUBLIC ${PROJECT_SOURCE_DIR}/include)
+
+# glad.c (generated) triggers -Wpedantic warnings; silence for this target only
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(glad PRIVATE -Wno-pedantic)
+endif()
+
+# ----------------------------
+# Source collection
+# ----------------------------
 file(GLOB_RECURSE ALL_CPP_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
-file(GLOB_RECURSE ALL_HPP_FILES "${PROJECT_SOURCE_DIR}/include/*.hpp")
-file(GLOB_RECURSE EXTERN_HPP_FILES "${PROJECT_SOURCE_DIR}/external/*.hpp")
 
-# --- Create reusable Server library ---
-file(GLOB_RECURSE SERVERLIB_SOURCES "${PROJECT_SOURCE_DIR}/src/Networking/Server/*.cpp")
-
-add_library(ServerLib STATIC ${SERVERLIB_SOURCES})
-target_include_directories(ServerLib PUBLIC ${PROJECT_INCLUDES})
-
-# --- Remove server sources from global list to avoid double compilation ---
-list(REMOVE_ITEM ALL_CPP_FILES ${SERVERLIB_SOURCES})
-
-# --- Separate out main.cpp files ---
+# Find all main.cpp files (one executable per main)
 file(GLOB_RECURSE MAIN_FILES
     "${PROJECT_SOURCE_DIR}/src/*/main.cpp"
     "${PROJECT_SOURCE_DIR}/src/main.cpp"
 )
 
-# --- Shared (non-main) sources ---
+# Shared sources = everything except mains
 set(SHARED_SOURCES ${ALL_CPP_FILES})
 list(REMOVE_ITEM SHARED_SOURCES ${MAIN_FILES})
 
-# --- Automatically create one executable per main.cpp ---
+# ----------------------------
+# Build one executable per main.cpp
+# ----------------------------
 foreach(main_file ${MAIN_FILES})
-    # Get parent directory name (used as executable name)
     get_filename_component(dir ${main_file} DIRECTORY)
     get_filename_component(name ${dir} NAME)
 
-    # Fallback to project name if it's the root src/main.cpp
+    # If it's src/main.cpp at project root
     if("${name}" STREQUAL "src")
         set(name "MOBA")
     endif()
@@ -102,13 +108,12 @@ foreach(main_file ${MAIN_FILES})
     add_executable(${name}
         ${main_file}
         ${SHARED_SOURCES}
-        ${GLAD_SOURCES}
     )
 
     target_include_directories(${name} PRIVATE ${PROJECT_INCLUDES})
 
     target_link_libraries(${name}
-        ServerLib
+        glad
         ${OPENGL_LIBRARIES}
         ${SDL2_LIBRARIES}
         enet

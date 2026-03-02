@@ -24,9 +24,9 @@
 #include "GameClient/Camera/Camera.hpp"
 #include "GameClient/Camera/CameraController.hpp"
 
-#include "Networking/Client/NetClient.hpp"
-#include "Networking/Message/Message.hpp"
+#include "Networking/Core/Networker.hpp"
 #include "Networking/Packets/PacketDistributor.hpp"
+
 #include "GameClient/Packets/ClientAuthenticationPacket.hpp"
 #include "GameClient/Packets/GameArgsPacket.hpp"
 
@@ -40,7 +40,7 @@ private:
     std::unique_ptr<InputManager> inputManager; 
     std::unique_ptr<Renderer> renderer;
     std::unique_ptr<Game> game;
-    std::unique_ptr<NetClient> netClient;
+    std::unique_ptr<Networker> networker_;
 
     std::unique_ptr<Camera> camera;
     std::unique_ptr<CameraController> cameraController;
@@ -61,7 +61,7 @@ private:
     void Render();
     void init_server_connection();
 
-    void processGameArgsPacket(const GameArgsPacket& pkt);
+    void processGameArgsPacket(GameArgsPacket& pkt);
 
     void initialisePacketDistributors();
 

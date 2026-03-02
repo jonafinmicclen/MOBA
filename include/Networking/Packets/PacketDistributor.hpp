@@ -2,6 +2,9 @@
 
 #include "Networking/Packets/PacketTypes.hpp"
 #include "Networking/Packets/PacketBase.hpp"
+#include "Networking/Packets/PacketFactory.hpp"
+
+#include "Networking/Packets/PacketMetadata.hpp"
 
 #include "Debug/debug.hpp"
 
@@ -14,17 +17,17 @@
 
 class PacketDistributor {
 public:
-    PacketDistributor() = default;
+    PacketDistributor() {}
 
     // Register a typed listener for a PacketType.
     // The listener will receive TPacket&, already cast.
     template <typename TPacket>
-    void on(PacketType type, std::function<void(const TPacket&, const uint8_t)> fn) {
+    void on(PacketType type, std::function<void(const TPacket&, const PacketMetadata&)> fn) {
         static_assert(std::is_base_of_v<PacketBase, TPacket>,
                       "TPacket must derive from PacketBase");
 
         listeners_[type].push_back(
-            [type, f = std::move(fn)](const PacketBase& base, const uint8_t id) {
+            [type, f = std::move(fn)](const PacketBase& base, const PacketMetadata& metadata) {
 
                 // Can remove dynamic cast later
                 const auto* pkt = dynamic_cast<const TPacket*>(&base);
@@ -32,23 +35,23 @@ public:
                     DEBUG_LOG("Unrecognised packet");
                     return;
                 }
-                f(*pkt, id);
+                f(*pkt, metadata);
             }
         );
     }
 
     // Dispatch packet based on packet.getType().
     // Returns true if at least one listener ran.
-    bool dispatch(const PacketBase& packet, const uint8_t id) const {
+    bool dispatch(const PacketBase& packet, const PacketMetadata& metadata) const {
         auto it = listeners_.find(packet.getType());
         if (it == listeners_.end()) return false;
 
-        for (const auto& cb : it->second) cb(packet, id);
+        for (const auto& cb : it->second) cb(packet, metadata);
         return !it->second.empty();
     }
 
-    bool dispatch(const std::unique_ptr<PacketBase>& packet, const uint8_t id) const {
-        return packet ? dispatch(*packet, id) : false;
+    bool dispatch(const std::unique_ptr<PacketBase>& packet, const PacketMetadata& metadata) const {
+        return packet ? dispatch(*packet, metadata) : false;
     }
 
     void clear() { listeners_.clear(); }
@@ -61,6 +64,6 @@ private:
         }
     };
 
-    using AnyListener = std::function<void(const PacketBase&, const uint8_t)>;
+    using AnyListener = std::function<void(const PacketBase&, const PacketMetadata&)>;
     std::unordered_map<PacketType, std::vector<AnyListener>, EnumHash> listeners_;
 };

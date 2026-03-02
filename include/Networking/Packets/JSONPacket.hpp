@@ -46,7 +46,7 @@ class JSONPacket : public AutoRegisterPacket<JSONPacket, PacketType::JSON_Packet
         }
     }
 
-    const json& get_json() const {
+    json& get_json() {
         return json_data;
     }
 

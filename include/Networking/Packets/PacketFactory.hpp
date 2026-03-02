@@ -28,6 +28,10 @@ public:
         return nullptr;
     }
 
+    static std::unique_ptr<PacketBase> deserialisePacket(const std::vector<uint8_t> bytes) {
+        return deserialisePacket(bytes.data(), bytes.size());
+    }
+
     // Register a packet type
     static void registerPacket(PacketType type, CreatorFunc creator) {
         registry()[type] = creator;
