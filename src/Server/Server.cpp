@@ -9,14 +9,18 @@ void Server::initialise() {
         "localhost",
         8080
     );
-    
+
     net_server_.emplace(net_config); 
-    net_server_->start();
     net_adapter_.emplace(*net_server_);
     game_ = std::make_unique<Game>();
+    packet_distributor_.emplace();
+    packet_manager_.emplace(*packet_distributor_, *net_server_);
 
-    DEBUG_LOG("LOADING CONFIG");
     loadConfig();
+
+    client_auth_manager_.emplace(*packet_distributor_, *net_adapter_, *game_args_);
+    net_server_->start();
+    
 }
 
 

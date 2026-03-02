@@ -5,8 +5,9 @@ Game::Game() {
 }
 
 void Game::setMap(std::string name) {
-    map = MapFactory::instance().create(name);
+    map = std::move(MapFactory::instance().create(name));
     DEBUG_LOG(map->getName());
+    addEntity(map);
 }
 
 Map& Game::getMap() {
@@ -25,6 +26,6 @@ std::vector<const ObjectState*> Game::getStates() {
     return states;
 }
 
-void Game::addEntity(std::unique_ptr<Entity> entity) {
-    entities.push_back(std::move(entity));
+void Game::addEntity(std::shared_ptr<Entity> entity) {
+    entities.push_back(entity);
 }

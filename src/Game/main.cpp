@@ -2,12 +2,13 @@
 
 #include <iostream>
 
+#include "GameClient/GameClient.hpp"
+
 int main(int argc, char **argv) {
-    /** 
-*    std::cout<<"Starting Game."<<std::endl;
-*    GameClient gameC = GameClient();
-*    gameC.Run();
-*    return 0;
-*/
-return 0;
+
+    std::cout<<"Starting Game."<<std::endl;
+    GameClient* gameC = new GameClient;
+    gameC->run();
+
+    return 0;
 }

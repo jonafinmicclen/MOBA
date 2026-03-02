@@ -2,136 +2,66 @@
 
 
 GameClient::GameClient() {
- 
-    // Initialise everything, order matters
-    camera = std::make_unique<Camera>();
-    cameraController = std::make_unique<CameraController>(camera.get());
-    inputManager = std::make_unique<InputManager>();
-    game = std::make_unique<Game>();
 
-    std::string server_address = "localhost";
-    //netClient = std::make_unique<NetClient>(server_address.c_str(), 8080);    // Hardcoded address
+    NetConfig cfg(
+        2,
+        3,
+        nullptr,
+        8080
+    );
 
-    exitListener = std::make_unique<ExitListener>(&running);
-    inputManager->AddListener(exitListener.get());
+    networker_.emplace(cfg);
+    network_adapter_.emplace(*networker_);
+    packet_distributor_.emplace();
+    packet_manager_.emplace(*packet_distributor_, *networker_);
 
-    AutoRegisterPacket<
-        GameArgsPacket,
-        PacketType::GAME_ARGS_PACKET
-    >::register_pkt();
+    camera_.emplace();
+    camera_controller_.emplace(&*camera_);
+    input_manager_.emplace();
+    game_ = std::make_unique<Game>();
 
-    initialiseRenderer();    
+    exit_listener_.emplace(&running_);
+    input_manager_->AddListener(&*exit_listener_);
 
-    initialisePacketDistributors();
+    game_args_handler_.emplace(AssetDatabase::instance(), ResourceManager::instance(), *renderer_, *game_, *packet_distributor_);
 
-    init_server_connection();    
+    renderer_.emplace(window_width_, window_height_);
+    renderer_->setCamera(&*camera_);
+
+    network_event_distributor_.emplace(*networker_);
+
+    server_connection_manager_.emplace(
+        "RuntimeData/auth_ctos.json",
+        *network_adapter_,
+        *network_event_distributor_,
+        ConnectCmd({"localhost", 8080})
+    );
+
+    networker_->start();
+    server_connection_manager_->connect();
 }
 
-void GameClient::loadAssets(const json& game_args) {
 
-    // Validate the stuff is there
-    auto required_args = {"map", "active_character", "all_assets"};
-    for (auto& arg : required_args) {
-        if (!game_args.contains(arg)) {
-            DEBUG_LOG("required arg " << arg << " was missing from args recieved from server");
-        }
-    }
+void GameClient::render() {
+    renderer_->beginRender();
 
-    // Load everything
-    for (auto& asset_name : game_args["all_assets"]) {
-        // Load in res manager
-        auto path = assetDatabase.Get(asset_name).asset_path;
-        resourceManager.loadAsset(path, asset_name);
-        Asset* asset = resourceManager.getAsset(asset_name);
-        renderer->uploadAssetMesh(asset);
-        DEBUG_LOG("loading " << asset_name);
-    }
-
-    // Load map
-    auto& map = game_args["map"];
-    game->setMap(map);
-
-    // Load player character
-    auto& active_character = game_args["active_character"];
-    // save this somewhere idk where yet
-    // maybe assign to player controller or something or maybe it should go somewhere else
-
-
-}
-
-void GameClient::initialiseRenderer() {
-    renderer = std::make_unique<Renderer>(window_width, window_height);
-    renderer->setCamera(camera.get());
-}
-
-void GameClient::Render() {
-    renderer->beginRender();
-
-    renderer->testMesh(translation);
-    for (const ObjectState* obj_state : game->getStates()) {
+    for (const ObjectState* obj_state : game_->getStates()) {
         glm::mat4 transform = obj_state->transform.toMat4();
-        renderer->drawMesh(obj_state->name, transform);
+        renderer_->drawMesh(obj_state->name, transform);
     }
 
-    renderer->endRender();
+    renderer_->endRender();
 }
 
-void GameClient::Run() {
-    while (running) {
+void GameClient::run() {
+    running_ = true;
+    while (running_) {
 
-        cameraController->update(window_width, window_height);
-        inputManager->Update();
-        netClient->pollEvents();
-        Render();
+        packet_manager_->pump();
+        network_event_distributor_->pump();
+        camera_controller_->update(window_width_, window_height_);
+        input_manager_->Update();
+        render();
 
     }
 } 
-
-void GameClient::init_server_connection() {
-    while (!netClient->is_connected()) {
-        netClient->connectServer();
-    }
-    DEBUG_LOG("Connected with server");
-
-    auto packet = std::make_unique<ClientAuthenticationPacket>();
-
-    // Locally saved authentication packet
-    packet->json_from_file("RuntimeData/auth_ctos.json");
-
-    // Construct message for authentication.
-    //Message message;
-    //message.packet = std::move(packet);
-    //message.header.flag = PacketFlag::GAMEPLAY;
-
-    DEBUG_LOG("Sending auth packet");
-
-    //netClient->push_outgoing_packet(message);
-    netClient->send_packet_queue();
-
-    DEBUG_LOG("Clearing packets until GAME_ARGS_PACKET");
-    for (;;) {
-        netClient->pollEvents();
-        auto packet = netClient->popPacketQueue();
-
-        if (packet)  {
-            DEBUG_LOG("Dispatching packet");
-    //        packetDistributor.dispatch(packet, 0);
-            break;
-        }
-    }
-
-}
-
-
-void GameClient::processGameArgsPacket(GameArgsPacket& pkt) {
-    loadAssets(pkt.get_json());
-}
-
-void GameClient::initialisePacketDistributors() {
-    packetDistributor.on<GameArgsPacket>(
-        PacketType::GAME_ARGS_PACKET, 
-        [this](const GameArgsPacket& pkt, const uint8_t id) {
-            processGameArgsPacket(pkt);
-        }
-    );
-}

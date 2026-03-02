@@ -6,7 +6,7 @@
 
 class Entity {
     public:
-    virtual ObjectState& getState() = 0;
+    ObjectState& getState() {return state;}
 
     protected:
     ObjectState state;

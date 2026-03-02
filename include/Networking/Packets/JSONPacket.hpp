@@ -50,6 +50,10 @@ class JSONPacket : public AutoRegisterPacket<JSONPacket, PacketType::JSON_Packet
         return json_data;
     }
 
+    const json& read_json() const {
+        return json_data;
+    }
+
     void set_json(json& data) {
         json_data = data;
     }

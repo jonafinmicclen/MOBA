@@ -41,6 +41,10 @@ public:
         networker_.pushMessage(std::move(message));
     }
 
+    void command(NetCommand&& command) {
+        networker_.pushCommand(std::move(command));
+    }
+
 private:
     Networker& networker_;
 
@@ -50,5 +54,6 @@ private:
             case Channel::STATEUPDATES:     return 0; // unreliable + sequenced
             case Channel::RELIABLECOMMANDS: return ENET_PACKET_FLAG_RELIABLE;
         }
+        return 0;
     }
 };

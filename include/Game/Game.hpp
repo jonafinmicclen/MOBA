@@ -19,11 +19,11 @@ public:
     void setMap(const std::string name);
     Map& getMap();
 
-    void addEntity(std::unique_ptr<Entity>);
+    void addEntity(std::shared_ptr<Entity>);
 
     std::vector<const ObjectState*> getStates();
 private:
-    std::vector<std::unique_ptr<Entity>> entities;
+    std::vector<std::shared_ptr<Entity>> entities;
 
-    std::unique_ptr<Map> map;
+    std::shared_ptr<Map> map;
 };

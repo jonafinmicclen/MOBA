@@ -10,6 +10,9 @@
 #include "Server/GameArgs.hpp"
 #include "Adapter/NetAdapter.hpp"
 
+
+#include "Debug/debug.hpp"
+
 class ClientAuthManager {
 public:
     ClientAuthManager(PacketDistributor& distributor, NetAdapter& networker, GameArgs& game_args) 
@@ -17,6 +20,7 @@ public:
         initListener(distributor);
     }
     PeerDirectory& getMap() {return map_;}
+    const bool authenticated() const {return authenticated_;}
 private:
 
     void initListener(PacketDistributor& distributor) {
@@ -34,26 +38,35 @@ private:
 
     void authenticate(const ClientAuthenticationPacket& pkt, const PacketMetadata& metadata) {
         auto acc_id = pkt.getHash();
-        if (!acc_id || metadata.ids.size() != 0) {
+        if (!acc_id || metadata.ids.size() != 1) {
+            DEBUG_LOG("disconnected as malformed auth");
+            networker_.command(DisconnectCmd(metadata.ids[0]));
             // Disconnect them
             return;
         }
         auto character = game_args_.player_account_map.characterFor(*acc_id);
         if (!character) {
             // Disconnect them
+            DEBUG_LOG((int)metadata.ids[0] << "disconnected as no character in map");
+            networker_.command(DisconnectCmd(metadata.ids[0]));
             return;
         }
         auto peer = metadata.ids[0];
         map_.addAccount(*acc_id, peer);
 
-        GameArgsPacket packet(game_args_);
+        GameArgsPacket packet = GameArgsPacket::fromArgs(game_args_);
         auto& json_data = packet.get_json();
         json_data["active_character"] = *character;
 
+        DEBUG_LOG("AUTHMANAGER DISPATCHGIN");
+
         networker_.sendPacket(&packet, Channel::RELIABLEGAMEPLAY, {peer});
+        authenticated_ = true;
     }
 
     PeerDirectory map_;
     NetAdapter& networker_;
     GameArgs& game_args_;
+
+    bool authenticated_ = false;
 };

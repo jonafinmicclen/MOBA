@@ -9,6 +9,7 @@
 #include "Networking/NetConfig.hpp"
 #include "Networking/PacketManager.hpp"
 #include "Adapter/NetAdapter.hpp"
+#include "Server/ClientAuthManager.hpp"
 
 #include "Server/AccountCharacterBiMap.hpp"
 
@@ -40,15 +41,18 @@ private:
     void initialise();
     void loadConfig();
 
+    std::unique_ptr<Game> game_;
+
+    std::optional<Networker> net_server_;
     std::optional<NetAdapter> net_adapter_;
 
     std::optional<PacketDistributor> packet_distributor_;
     std::optional<PacketManager> packet_manager_;
 
-    std::optional<Networker> net_server_;
-    std::unique_ptr<Game> game_;
+    std::optional<ClientAuthManager> client_auth_manager_;
 
-    std::optional<GameArgs> game_args_ = std::nullopt;
+    
+    std::optional<GameArgs> game_args_;
     
 
     bool running = false;

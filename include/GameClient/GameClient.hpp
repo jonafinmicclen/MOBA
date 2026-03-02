@@ -26,47 +26,56 @@
 
 #include "Networking/Core/Networker.hpp"
 #include "Networking/Packets/PacketDistributor.hpp"
+#include "Networking/NetConfig.hpp"
+#include "Networking/PacketManager.hpp"
+#include "Networking/Core/NetEventDistributor.hpp"
+#include "Adapter/NetAdapter.hpp"
+#include "GameClient/Net/ServerConnectionManager.hpp"
 
 #include "GameClient/Packets/ClientAuthenticationPacket.hpp"
 #include "GameClient/Packets/GameArgsPacket.hpp"
+#include "GameClient/Net/GameArgsHandler.hpp"
 
 
 class GameClient {
 public:
     GameClient();
-    void Run();
+
+    void run();
 
 private:
-    std::unique_ptr<InputManager> inputManager; 
-    std::unique_ptr<Renderer> renderer;
-    std::unique_ptr<Game> game;
-    std::unique_ptr<Networker> networker_;
-
-    std::unique_ptr<Camera> camera;
-    std::unique_ptr<CameraController> cameraController;
-
-    std::unique_ptr<ExitListener>  exitListener;
-
-    AssetDatabase& assetDatabase = AssetDatabase::instance();
-    ResourceManager& resourceManager = ResourceManager::instance();
-
-    PacketDistributor packetDistributor;
-
-    std::vector<std::string> characterArgs;
-
-    glm::vec3 translation = {0.0f, 0.0f, 0.0f};
-
     void initialiseRenderer();
     void loadAssets(const json& game_args);
-    void Render();
-    void init_server_connection();
+    void render();
+    void initServerConnection();
 
     void processGameArgsPacket(GameArgsPacket& pkt);
 
     void initialisePacketDistributors();
 
-    int window_width = 1920;
-    int window_height = 1080;
+    std::optional<Networker> networker_;
+    std::optional<NetAdapter> network_adapter_;
 
-    bool running = true;
+    std::optional<NetEventDistributor> network_event_distributor_;
+    std::optional<ServerConnectionManager> server_connection_manager_;
+
+    std::optional<PacketDistributor> packet_distributor_;
+    std::optional<PacketManager> packet_manager_;
+
+    std::unique_ptr<Game> game_;
+
+    std::optional<GameArgsHandler> game_args_handler_;
+
+    std::optional<Renderer> renderer_;
+    std::optional<Camera> camera_;
+
+    std::optional<CameraController> camera_controller_;
+    std::optional<InputManager> input_manager_; 
+    std::optional<ExitListener>  exit_listener_;
+    
+
+    int window_width_ = 1920;
+    int window_height_ = 1080;
+
+    bool running_ = false;
 };
