@@ -20,7 +20,7 @@ public:
         initListener(distributor);
     }
     PeerDirectory& getMap() {return map_;}
-    const bool authenticated() const {return authenticated_;}
+    bool authenticated() const {return authenticated_;}
 private:
 
     void initListener(PacketDistributor& distributor) {
@@ -58,9 +58,10 @@ private:
         auto& json_data = packet.get_json();
         json_data["active_character"] = *character;
 
-        DEBUG_LOG("AUTHMANAGER DISPATCHGIN");
-
         networker_.sendPacket(&packet, Channel::RELIABLEGAMEPLAY, {peer});
+
+        DEBUG_LOG("client authenticated");
+
         authenticated_ = true;
     }
 

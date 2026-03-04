@@ -48,10 +48,10 @@ private:
         connected_ = false;
         connect();
     }
-
-    std::optional<GameArgsHandler> args_handler_;
-    ConnectCmd connect_command_;
+   
     NetAdapter& network_adapter_;
+    ConnectCmd connect_command_;
+    std::optional<GameArgsHandler> args_handler_;
 
     ClientAuthenticationPacket auth_packet_;
     bool connected_ =  false;

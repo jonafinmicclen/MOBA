@@ -23,7 +23,6 @@ public:
 
     std::vector<const ObjectState*> getStates();
 private:
-    std::vector<std::shared_ptr<Entity>> entities;
-
-    std::shared_ptr<Map> map;
+    std::vector<std::shared_ptr<Entity>> entities_;
+    std::shared_ptr<Map> map_;
 };

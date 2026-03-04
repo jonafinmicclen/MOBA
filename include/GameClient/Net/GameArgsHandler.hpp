@@ -18,7 +18,7 @@ public:
                 registerListener(distributor);
             }
 
-    const bool loaded() const {return loaded_args_.has_value();}
+    bool loaded() const {return loaded_args_.has_value();}
 private:
     void processPacket(const GameArgsPacket& pkt, const PacketMetadata& metadata) {
         const json& args = pkt.read_json();

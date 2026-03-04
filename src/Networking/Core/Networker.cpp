@@ -129,6 +129,7 @@ void Networker::pollEvents() {
             case ENET_EVENT_TYPE_CONNECT: onConnect(event_); break;
             case ENET_EVENT_TYPE_RECEIVE: onRecieve(event_); break;
             case ENET_EVENT_TYPE_DISCONNECT: onDisconnect(event_); break;
+            default: break;
         }
     }
 }

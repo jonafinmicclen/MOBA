@@ -14,7 +14,7 @@ void CameraController::moveCameraTowardsMouse(const int window_width, const int 
     float dy = 0;
     const float deadzone_proportion = 0.92f;
     const float inverse_pan_speed = 13000.0f;
-    Uint32 buttons = SDL_GetMouseState(&x, &y);
+    SDL_GetMouseState(&x, &y);
 
     float x_from_centre = x - (float)window_width / 2;
     float y_from_centre = y - (float)window_height / 2;
