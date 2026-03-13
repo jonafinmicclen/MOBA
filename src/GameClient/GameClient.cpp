@@ -21,12 +21,12 @@ GameClient::GameClient() {
     game_ = std::make_unique<Game>();
 
     exit_listener_.emplace(&running_);
-    input_manager_->AddListener(&*exit_listener_);
-
-    game_args_handler_.emplace(AssetDatabase::instance(), ResourceManager::instance(), *renderer_, *game_, *packet_distributor_);
-
+    input_manager_->addListener(&*exit_listener_);
+    
     renderer_.emplace(window_width_, window_height_);
     renderer_->setCamera(&*camera_);
+
+    game_args_handler_.emplace(AssetDatabase::instance(), ResourceManager::instance(), *renderer_, *game_, *packet_distributor_);
 
     network_event_distributor_.emplace(*networker_);
 
@@ -60,7 +60,7 @@ void GameClient::run() {
         packet_manager_->pump();
         network_event_distributor_->pump();
         camera_controller_->update(window_width_, window_height_);
-        input_manager_->Update();
+        input_manager_->update();
         render();
 
     }

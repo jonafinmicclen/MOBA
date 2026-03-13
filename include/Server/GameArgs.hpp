@@ -22,7 +22,7 @@ struct GameArgs {
     AccountCharacterBiMap player_account_map;
 
     GameArgs(const std::string path) {
-        std::ifstream f("RuntimeData/game_args.json");
+        std::ifstream f(path);
         json game_args = json::parse(f);
         map = game_args["map"];
         for (auto& [account, character] : game_args["players"].items()) {

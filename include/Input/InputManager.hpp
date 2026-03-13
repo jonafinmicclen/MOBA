@@ -12,12 +12,11 @@
 
 
 class InputManager {
-    private:
-    std::unordered_map<InputEventType, std::vector<IInputListener*>> listeners;
-    void DispatchEvent(InputEvent& event);
+public:
+    void addListener(IInputListener* listener);
+    void update();
 
-    
-    public:
-    void AddListener(IInputListener* listener);
-    void Update();
+private:
+    std::unordered_map<InputEventType, std::vector<IInputListener*>> listeners;
+    void dispatchEvent(InputEvent& event);
 };

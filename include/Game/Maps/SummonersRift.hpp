@@ -13,6 +13,7 @@ public:
         state = ObjectState{getName(), t};
     }
     std::string getName() override {return "Summoners Rift";}
+    void initialiseGame(Game& game) {}
 };
 
 // Header-only registration

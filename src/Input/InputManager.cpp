@@ -1,7 +1,7 @@
 #include "Input/InputManager.hpp"
 
 
-void InputManager::DispatchEvent(InputEvent& event) {
+void InputManager::dispatchEvent(InputEvent& event) {
     auto it = listeners.find(event.type);
     if (it != listeners.end()) {
         for (auto* listener : listeners[event.type]) {
@@ -13,7 +13,7 @@ void InputManager::DispatchEvent(InputEvent& event) {
 
 }
 
-void InputManager::AddListener(IInputListener* listener) {
+void InputManager::addListener(IInputListener* listener) {
     for (InputEventType interest : listener->getInterests()) {
         if (listeners.contains(interest)) {
             listeners[interest].push_back(listener);
@@ -23,7 +23,7 @@ void InputManager::AddListener(IInputListener* listener) {
     }
 }
 
-void InputManager::Update() {
+void InputManager::update() {
     SDL_Event sdlEvent;
     while (SDL_PollEvent(&sdlEvent)) {
         InputEvent event;
@@ -33,14 +33,14 @@ void InputManager::Update() {
                 if (!sdlEvent.key.repeat) {
                     event.type = InputEventType::KeyDown;
                     event.key = sdlEvent.key.keysym.sym;
-                    DispatchEvent(event);
+                    dispatchEvent(event);
                 }
                 break;
 
             case SDL_KEYUP:
                 event.type = InputEventType::KeyUp;
                 event.key = sdlEvent.key.keysym.sym;
-                DispatchEvent(event);
+                dispatchEvent(event);
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
@@ -50,7 +50,7 @@ void InputManager::Update() {
                     static_cast<float>(sdlEvent.button.y)
                 };
                 event.mouseButton = sdlEvent.button.button;
-                DispatchEvent(event);
+                dispatchEvent(event);
                 break;
 
             case SDL_MOUSEBUTTONUP:
@@ -60,7 +60,7 @@ void InputManager::Update() {
                     static_cast<float>(sdlEvent.button.y)
                 };
                 event.mouseButton = sdlEvent.button.button;
-                DispatchEvent(event);
+                dispatchEvent(event);
                 break;
 
             case SDL_MOUSEMOTION:
@@ -70,12 +70,12 @@ void InputManager::Update() {
                     static_cast<float>(sdlEvent.button.x),
                     static_cast<float>(sdlEvent.button.y)
                 };
-                DispatchEvent(event);
+                dispatchEvent(event);
                 break;
 
             case SDL_QUIT:
                 event.type = InputEventType::Exit;
-                DispatchEvent(event);
+                dispatchEvent(event);
                 break;
 
         }
