@@ -1,0 +1,4 @@
+{
+    "map ": "<MAP_NAME>",
+    "players" : {"<HASH>" : "<CHAR_NAME>"}
+}

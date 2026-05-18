@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+#include "Server/Server.hpp"
+
+int main() {
+    Server* server = new Server();
+    server->simulate();
+}
+=======
 #include "Networking/Server/NetServer.hpp"
 #include "Networking/Client/NetClient.hpp"
 
@@ -69,3 +77,4 @@ int main() {
     server_thread.join();
     return 0;
 }
+>>>>>>> origin/main

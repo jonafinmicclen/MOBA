@@ -28,3 +28,4 @@ This is a C++ MOBA project using:
 
 ---
 
+Things were moving slow so I vibe coded the renderer, its dogshit and I will imrpove it laterrrrrrr, more interrested in the networking side and game logic for now.
