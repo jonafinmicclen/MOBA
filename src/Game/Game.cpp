@@ -1,5 +1,6 @@
 #include "Game/Game.hpp"
 
+<<<<<<< HEAD
 Game::Game() {
 
 }
@@ -28,3 +29,5 @@ std::vector<const ObjectState*> Game::getStates() {
 void Game::addEntity(std::shared_ptr<Entity> entity) {
     entities_.push_back(entity);
 }
+=======
+>>>>>>> origin/main

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #pragma once
 
 #include <memory>
@@ -25,4 +26,19 @@ public:
 private:
     std::vector<std::shared_ptr<Entity>> entities_;
     std::shared_ptr<Map> map_;
+=======
+// Game.hpp
+#pragma once
+
+class Game {
+    public:
+    Game();
+    ~Game();
+
+    
+
+    
+    private:
+
+>>>>>>> origin/main
 };
