@@ -20,7 +20,6 @@ public:
         initListener(distributor);
     }
     PeerDirectory& getMap() {return map_;}
-    bool authenticated() const {return authenticated_;}
 private:
 
     void initListener(PacketDistributor& distributor) {
@@ -61,13 +60,9 @@ private:
         networker_.sendPacket(&packet, Channel::RELIABLEGAMEPLAY, {peer});
 
         DEBUG_LOG("client authenticated");
-
-        authenticated_ = true;
     }
 
     PeerDirectory map_;
     NetAdapter& networker_;
     GameArgs& game_args_;
-
-    bool authenticated_ = false;
 };

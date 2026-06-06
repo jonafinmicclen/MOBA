@@ -4,9 +4,14 @@ Game::Game() {
 
 }
 
-void Game::setMap(std::string name) {
+void Game::setMap(const std::string name, std::optional<const uint32_t> mesh_id) {
     map_ = std::move(MapFactory::instance().create(name));
-    addEntity(map_);
+    auto& transform = map_->getState().transform;
+    world_.add<ArchetypeId::Map>(transform, *mesh_id);
+}
+
+World& Game::getWorld() {
+    return world_;
 }
 
 Map& Game::getMap() {
@@ -14,17 +19,4 @@ Map& Game::getMap() {
 }
 
 void Game::update() {
-}
-
-std::vector<const ObjectState*> Game::getStates() {
-    std::vector<const ObjectState*> states;
-    states.reserve(entities_.size());
-    for (auto& entity : entities_) {
-        states.push_back(&entity->getState());
-    }
-    return states;
-}
-
-void Game::addEntity(std::shared_ptr<Entity> entity) {
-    entities_.push_back(entity);
 }

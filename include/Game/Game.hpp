@@ -1,9 +1,12 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "Debug/debug.hpp"
+
+#include "Game/ECS/World.hpp"
 
 #include "Game/ObjectState.hpp"
 #include "Game/Maps/Map.hpp"
@@ -16,13 +19,12 @@ public:
     Game();
     void update();
     
-    void setMap(const std::string name);
+    void setMap(const std::string name, std::optional<const uint32_t> mesh_id = std::nullopt);
     Map& getMap();
+    World& getWorld();
 
-    void addEntity(std::shared_ptr<Entity>);
 
-    std::vector<const ObjectState*> getStates();
 private:
-    std::vector<std::shared_ptr<Entity>> entities_;
+    World world_;
     std::shared_ptr<Map> map_;
 };

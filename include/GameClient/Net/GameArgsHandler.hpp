@@ -33,7 +33,7 @@ private:
         } else {
             DEBUG_LOG("args previously loaded but are different");
         }
-
+        MeshID mesh_id{0};
         // Load assets + upload
         for (const auto& asset_name_j : game_args.at("all_assets")) {
             const std::string asset_name = asset_name_j.get<std::string>();
@@ -45,13 +45,13 @@ private:
                 DEBUG_LOG("asset was null after load: " << asset_name);
                 continue;
             }
-            renderer_.uploadAssetMesh(asset);
+            mesh_id = renderer_.uploadAssetMesh(asset);
             DEBUG_LOG("loaded+uploaded " << asset_name);
         }
 
         // Map
-        const std::string map = game_args.at("map").get<std::string>();
-        game_.setMap(map);
+        const std::string map_name = game_args.at("map").get<std::string>();
+        game_.setMap(map_name, mesh_id);
 
         // Active character (store somewhere later)
         const std::string active_char = game_args.at("active_character").get<std::string>();

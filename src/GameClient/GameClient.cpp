@@ -45,11 +45,11 @@ GameClient::GameClient() {
 void GameClient::render() {
     renderer_->beginRender();
 
-    for (const ObjectState* obj_state : game_->getStates()) {
-        glm::mat4 transform = obj_state->transform.toMat4();
-        renderer_->drawMesh(obj_state->name, transform);
-    }
-
+    game_->getWorld().queryColumns<Transform, MeshID>([this](std::span<Transform> t, std::span<MeshID> id){
+        for (size_t i = 0; i < t.size(); ++i) {
+            renderer_->drawMesh(id[i], t[i].toMat4());
+        }
+    });
     renderer_->endRender();
 }
 
