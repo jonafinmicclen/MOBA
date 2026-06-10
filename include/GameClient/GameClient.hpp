@@ -29,6 +29,7 @@
 #include "Networking/NetConfig.hpp"
 #include "Networking/PacketManager.hpp"
 #include "Networking/Core/NetEventDistributor.hpp"
+#include "Networking/Packets/ClientCommandPacket.hpp"
 #include "Adapter/NetAdapter.hpp"
 #include "GameClient/Net/ServerConnectionManager.hpp"
 
@@ -44,14 +45,8 @@ public:
     void run();
 
 private:
-    void initialiseRenderer();
-    void loadAssets(const json& game_args);
+    void registerSendInputCommands();
     void render();
-    void initServerConnection();
-
-    void processGameArgsPacket(GameArgsPacket& pkt);
-
-    void initialisePacketDistributors();
 
     std::optional<Networker> networker_;
     std::optional<NetAdapter> network_adapter_;
@@ -71,7 +66,6 @@ private:
 
     std::optional<CameraController> camera_controller_;
     std::optional<InputManager> input_manager_; 
-    std::optional<ExitListener>  exit_listener_;
     
 
     int window_width_ = 1920;

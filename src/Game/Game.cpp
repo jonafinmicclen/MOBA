@@ -7,6 +7,7 @@ Game::Game() {
 void Game::setMap(const std::string name, std::optional<const uint32_t> mesh_id) {
     map_ = std::move(MapFactory::instance().create(name));
     auto& transform = map_->getState().transform;
+    // Undefined behaviour when no meshid
     world_.add<ArchetypeId::Map>(transform, *mesh_id);
 }
 

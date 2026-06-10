@@ -20,11 +20,16 @@ GameClient::GameClient() {
     input_manager_.emplace();
     game_ = std::make_unique<Game>();
 
-    exit_listener_.emplace(&running_);
-    input_manager_->addListener(&*exit_listener_);
+    input_manager_->addListener(InputEventType::Exit, [this](const InputEvent& e) {
+        running_ = false;
+    });
+
+    registerSendInputCommands();
     
     renderer_.emplace(window_width_, window_height_);
     renderer_->setCamera(&*camera_);
+
+    ResourceManager::instance().init(&*renderer_);
 
     game_args_handler_.emplace(AssetDatabase::instance(), ResourceManager::instance(), *renderer_, *game_, *packet_distributor_);
 
@@ -45,7 +50,7 @@ GameClient::GameClient() {
 void GameClient::render() {
     renderer_->beginRender();
 
-    game_->getWorld().queryColumns<Transform, MeshID>([this](std::span<Transform> t, std::span<MeshID> id){
+    game_->getWorld().queryColumns<Transform, MeshId>([this](std::span<Transform> t, std::span<MeshId> id){
         for (size_t i = 0; i < t.size(); ++i) {
             renderer_->drawMesh(id[i], t[i].toMat4());
         }
@@ -61,7 +66,24 @@ void GameClient::run() {
         network_event_distributor_->pump();
         camera_controller_->update(window_width_, window_height_);
         input_manager_->update();
+        // package inputs and send convert screen space pos to world needs camera
+
         render();
 
     }
 } 
+
+void GameClient::registerSendInputCommands() {
+    input_manager_->addListener(InputEventType::MouseButtonUp,
+        [this](const InputEvent& e) {
+            ClientCommand c;
+            c.btn = ClientButton::RIGHT_CLICK;
+            c.mouse_pos = camera_->screenToWorldOnMap(e.mousePos, window_width_, window_height_);
+            DEBUG_LOG("world mouse x: " << c.mouse_pos.x << ", y: "<< c.mouse_pos.y);
+            c.release = true;
+            ClientCommandPacket p;
+            p.getData() = c;
+            network_adapter_->sendPacket(&p, Channel::RELIABLECOMMANDS, {});
+        }
+    );
+}

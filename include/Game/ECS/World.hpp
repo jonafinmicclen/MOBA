@@ -4,6 +4,8 @@
 #include "Game/ECS/Entity.hpp"
 #include "Game/Transform.hpp"
 #include "Game/Navigation/Path.hpp"
+#include "Game/Match/Team.hpp"
+#include "Game/Match/SpawnPoint.hpp"
 
 #include <deque>
 #include <cstdint>
@@ -50,6 +52,21 @@ struct EntityLocation {
 struct EntityHandle {
     EntityID eid;
     Generation gen;
+
+    bool operator==(const EntityHandle& other) const {
+        return eid == other.eid && gen == other.gen;
+    }
+
+    struct Hash {
+        static_assert((sizeof(eid) == 2 && sizeof(gen) == 2), "Handle hashing failed as assumed 16bit per member");
+        std::size_t operator()(const EntityHandle& h) const {
+            uint32_t packed =
+                (static_cast<uint32_t>(h.gen) << 16) |
+                 static_cast<uint32_t>(h.eid);
+
+            return std::hash<uint32_t>{}(packed);
+        }
+    };
 };
 
 class World {
@@ -127,12 +144,44 @@ public:
         free_eid_list_.push_front(entity.eid);
     }
 
+    template<typename T>
+    T* tryGet(EntityHandle entity) {
+        if (entity.eid >= entities.size()) {
+            return nullptr;
+        }
+
+        EntityLocation& loc = entities[entity.eid];
+
+        if (!loc.alive || loc.gen != entity.gen) {
+            return nullptr;
+        }
+
+        switch (loc.kind) {
+            case ArchetypeId::Champion:
+                if constexpr (archetype_has_components_v<decltype(champions), T>) {
+                    return &champions.template get<T>(loc.row);
+                } else {
+                    return nullptr;
+                }
+
+            case ArchetypeId::Map:
+                if constexpr (archetype_has_components_v<decltype(map), T>) {
+                    return &map.template get<T>(loc.row);
+                } else {
+                    return nullptr;
+                }
+
+            default:
+                return nullptr;
+        }
+    }
+
 private:
     std::deque<EntityID> free_eid_list_;
     EntityID next_eid_ = 0;
     std::vector<EntityLocation> entities;
 
-    Archetype<Transform, uint32_t, Path> champions;
+    Archetype<Transform, uint32_t, Path, Team, SpawnPoint> champions;
     Archetype<Transform, uint32_t> map;
 
     template<typename... Wanted, typename ArchetypeT, typename Func>

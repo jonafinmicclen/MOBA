@@ -84,6 +84,16 @@ public:
         return next_free_;
     }
 
+    template<typename T>
+    T& get(Row row) {
+        return getColumn<T>()[row];
+    }
+
+    template<typename T>
+    const T& get(Row row) const {
+        return getColumn<T>()[row];
+    }
+
 private:
     size_t next_free_ = 0;
     std::tuple<std::array<Components, ECS_CONFIG::MAX_ENTITY_PER_ARCHETYPE>...> columns_;

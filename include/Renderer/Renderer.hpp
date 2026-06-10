@@ -10,12 +10,13 @@
 
 #include "Renderer/Shader.hpp"
 #include "Assets/ResourceManager.hpp"
+#include "Assets/ModelData.hpp"
 #include <limits>
 
 #include "GameClient/Camera/Camera.hpp"
 #include <glm/gtx/string_cast.hpp>
 
-using MeshID = uint32_t;
+
 
 class Renderer {
 public:
@@ -25,8 +26,8 @@ public:
     void beginRender();
     void endRender();
     void testMesh(glm::vec3 translation);
-    MeshID uploadAssetMesh(Asset* asset);
-    void drawMesh(const MeshID mesh_id, const glm::mat4& model);
+    MeshId uploadAssetMesh(Asset* asset);
+    void drawMesh(const MeshId mesh_id, const glm::mat4& model);
 
     void setCamera(Camera* cam) {camera = cam; view=cam->getView(); proj=camera->getProjection((float)width/(float)height); }
 
@@ -59,6 +60,6 @@ private:
 
     int width, height;
 
-    MeshID next_mesh_id_ = 0;
+    MeshId next_mesh_id_ = 0;
     std::vector<std::unique_ptr<GLMesh>> meshes;
 };

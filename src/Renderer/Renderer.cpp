@@ -5,10 +5,10 @@ Renderer::~Renderer() {
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
-[[nodiscard]] MeshID Renderer::uploadAssetMesh(Asset* asset) {
+[[nodiscard]] MeshId Renderer::uploadAssetMesh(Asset* asset) {
     if (!asset || !asset->mesh) {
         std::cout << "[Renderer] Failed to load mesh" << std::endl;
-        return std::numeric_limits<MeshID>::max();
+        return std::numeric_limits<MeshId>::max();
     }
 
     MeshData* mesh = asset->mesh.get();
@@ -94,7 +94,7 @@ Renderer::~Renderer() {
 
     glBindVertexArray(0);
     meshes.push_back(std::move(glMesh));
-    return static_cast<MeshID>(meshes.size() - 1);
+    return static_cast<MeshId>(meshes.size() - 1);
 }
 
 
@@ -185,7 +185,7 @@ void Renderer::beginRender() {
 }
 
 
-void Renderer::drawMesh(const MeshID mesh_id, const glm::mat4& model) {
+void Renderer::drawMesh(const MeshId mesh_id, const glm::mat4& model) {
     GLMesh* mesh = meshes[mesh_id].get();
     if (!mesh) return;
 

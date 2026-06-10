@@ -1,6 +1,11 @@
 {
-  "map": "Summoners Rift",
-  "players": {
-    "45678": "Naren"
-  }
+  "map": "summoners_rift",
+  "players": [
+    {
+      "account": "45678",
+      "character": "naren",
+      "team": 0,
+      "spawnpoint": 0
+    }
+  ]
 }

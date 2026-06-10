@@ -19,6 +19,7 @@ void Server::initialise() {
     loadConfig();
 
     client_auth_manager_.emplace(*packet_distributor_, *net_adapter_, *game_args_);
+    client_command_handler_.emplace(*packet_distributor_, client_command_system_.getQueue(), client_auth_manager_->getMap());
     net_server_->start();
     
 }
@@ -30,12 +31,25 @@ void Server::loadConfig() {
 
     ResourceManager::instance().loadAsset(args.map);
     game_->setMap(args.map);
+    MapDef map = PlaceholderMapDef::getMap();
 
     for (auto& player : args.players) {
         ResourceManager::instance().loadAsset(player.character);
+        SpawnPoint player_spawn = map.spawn_points[player.player_idx];
+        Path p;
+        EntityHandle handle = game_->getWorld().add<ArchetypeId::Champion>(
+            player_spawn.point, 0, p, player.team, player_spawn
+        );
+        account_entity_map_.insert(player.account, handle);
+
     }
 
     game_args_ = std::move(args);
+    // By this point the loader will have returned MapDef and CharDef instances containing spawn points and etc
+    
+    // Initialise world
+    //World world = game_->getWorld();
+    //world.add<ArchetypeId::Champion>()
 }
 
 
