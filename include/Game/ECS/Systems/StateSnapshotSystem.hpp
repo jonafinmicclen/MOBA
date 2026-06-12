@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Game/ECS/World.hpp"
+#include "Game/Worlds/ServerWorld.hpp"
 
 class StateSnapshotSystem{
-    void update(World& world) {
+    void update(ServerWorld& world) {
         //world.queryColumns<Transform>
     }
 };

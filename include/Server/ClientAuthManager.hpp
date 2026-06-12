@@ -93,6 +93,7 @@ private:
 
     bool shouldBeginGame() {
         // Should never be more than but oh well
+        // This also does not take into account disconnects...
         //return connected_players_ >= game_args_.players.size();
         // 1 for testing
         return connected_players_ >= 1;

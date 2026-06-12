@@ -40,6 +40,10 @@ public:
         return std::span<const T>(arr.data(), size());
     }
 
+    std::span<const EntityID> getEntityIds() const {
+        return std::span<const EntityID>(entities_.data(), size());
+    }
+
     template<typename... Args>
     [[nodiscard]] Row add(EntityID eid, Args&&... components) {
         /**
@@ -107,4 +111,5 @@ private:
         return static_cast<uint16_t>(next_free_++);
     }
 };
+
 
