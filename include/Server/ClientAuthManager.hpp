@@ -10,13 +10,40 @@
 #include "Server/GameArgs.hpp"
 #include "Adapter/NetAdapter.hpp"
 
+#include "Game/Worlds/ServerWorld.hpp"
+#include "Adapter/NetAdapter.hpp"
+#include "Common/Memory/BiMap.hpp"
+#include "Game/Placeholder/PlaceholderMapDef.hpp"
+#include "Game/Packets/SpawnPacket.hpp"
+#include "Game/Packets/EntityOwnershipPacket.hpp"
 
+#include <cstdint>
 #include "Debug/debug.hpp"
 
+   // net_adapter, account_entity_map_, game_map-, world_
+
 class ClientAuthManager {
+    /**
+     * Listens for clients authentication packet
+     * Once authenticated maps peer -> account
+     * Tells client what data to load
+     */
 public:
-    ClientAuthManager(PacketDistributor& distributor, NetAdapter& networker, GameArgs& game_args) 
-        : networker_(networker), game_args_(game_args) {
+    ClientAuthManager(
+        PacketDistributor& distributor, 
+        NetAdapter& networker, 
+        GameArgs& game_args,
+        BiMap<AccountHash, EntityHandle>& acc_entity_map,
+        MapDef& game_map,
+        ServerWorld& world
+    ) 
+        : 
+        networker_(networker), 
+        game_args_(game_args),
+        account_entity_map_(acc_entity_map),
+        game_map_(game_map),
+        world_(world)
+        {
         initListener(distributor);
     }
     PeerDirectory& getMap() {return map_;}
@@ -54,15 +81,68 @@ private:
         map_.addAccount(*acc_id, peer);
 
         GameArgsPacket packet = GameArgsPacket::fromArgs(game_args_);
-        auto& json_data = packet.get_json();
-        json_data["active_character"] = *character;
 
         networker_.sendPacket(&packet, Channel::RELIABLEGAMEPLAY, {peer});
 
         DEBUG_LOG("client authenticated");
+        connected_players_++;
+        if (shouldBeginGame()) {
+            beginGame();
+        }
     }
 
+    bool shouldBeginGame() {
+        // Should never be more than but oh well
+        //return connected_players_ >= game_args_.players.size();
+        // 1 for testing
+        return connected_players_ >= 1;
+    }
+
+    void beginGame() {
+        // This should just be emitting an event
+        for (auto& player : game_args_.players) {
+            // Create the player entity
+            SpawnPoint player_spawn = game_map_.spawn_points[player.player_idx];
+            Transform spawn_transform;
+            spawn_transform.position.x = player_spawn.point.x;
+            spawn_transform.position.y = player_spawn.point.y;
+            Path p;
+            EntityHandle handle = world_.add<ServerArchetypeId::Champion>(
+                spawn_transform, p, player.team, player_spawn
+            );
+            // Emit spawn packet for clients
+            SpawnCommand c;
+            c.entity = player.character;
+            c.position = spawn_transform;
+            c.server_handle = handle;
+            SpawnPacket pkt;
+            pkt.setData(c);
+
+         
+
+            networker_.sendPacket(&pkt, Channel::RELIABLECOMMANDS, {});
+
+            // Register ownership to client
+            EntityOwnershipPacket ownership_pkt;
+            EntityOwnershipUpdate ownership_updt {handle};
+            ownership_pkt.setData(ownership_updt);
+            DEBUG_LOG("Mapping " << player.account << " to " << handle.eid << handle.gen);
+            account_entity_map_.insert(player.account, handle);
+            auto target_peer = map_.find(player.account);
+            assert(target_peer && "Peer not assigned when sending ownership");
+            networker_.sendPacket(&ownership_pkt, Channel::RELIABLECOMMANDS, {*target_peer});
+        }
+    }
+       // net_adapter, account_entity_map_, game_map-, world_
+
+    
+    
+    
     PeerDirectory map_;
     NetAdapter& networker_;
     GameArgs& game_args_;
+    BiMap<AccountHash, EntityHandle>& account_entity_map_;
+    MapDef& game_map_;
+    ServerWorld& world_;
+    uint8_t connected_players_ {0};
 };

@@ -14,7 +14,6 @@ void InputManager::dispatchEvent(const InputEvent& event) {
     auto it = listeners.find(event.type);
 
     if (it == listeners.end()) {
-        DEBUG_LOG("Unhandled Event; Type: " << static_cast<int>(event.type));
         return;
     }
 

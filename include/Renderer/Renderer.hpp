@@ -60,6 +60,5 @@ private:
 
     int width, height;
 
-    MeshId next_mesh_id_ = 0;
     std::vector<std::unique_ptr<GLMesh>> meshes;
 };

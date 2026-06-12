@@ -2,19 +2,20 @@
 
 #include "Game/ECS/Archetype.hpp"
 #include "Game/ECS/Entity.hpp"
-#include "Game/Transform.hpp"
-#include "Game/Navigation/Path.hpp"
-#include "Game/Match/Team.hpp"
-#include "Game/Match/SpawnPoint.hpp"
 
 #include <deque>
 #include <cstdint>
 #include <utility>
 #include <vector>
-#include <cassert>
 #include <limits>
 #include <type_traits>
 #include <stdexcept>
+#include <tuple>
+#include <functional>
+
+// ------------------------------------------------------------
+// Component checking helpers
+// ------------------------------------------------------------
 
 template<typename T, typename... Ts>
 inline constexpr bool contains_type_v = (std::is_same_v<T, Ts> || ...);
@@ -32,34 +33,61 @@ template<typename ArchetypeT, typename... Wanted>
 inline constexpr bool archetype_has_components_v =
     ArchetypeHasComponents<ArchetypeT, Wanted...>::value;
 
-enum class ArchetypeId : uint8_t {
-    Champion,
-    Minion,
-    ProjectileFree,
-    ProjectileHoming,
-    Turret,
-    Map,
-    None
+
+// ------------------------------------------------------------
+// Archetype spec
+// ------------------------------------------------------------
+//
+// This lets each World traits define its own enum class ArchetypeId.
+//
+// Example:
+//
+// ArchetypeSpec<
+//     ServerArchetypeId::Champion,
+//     Archetype<Transform, Team>
+// >
+//
+
+template<auto Id, typename ArchetypeT>
+struct ArchetypeSpec {
+    static constexpr auto id = Id;
+    using id_type = decltype(Id);
+    using type = ArchetypeT;
 };
 
+
+// ------------------------------------------------------------
+// Entity location
+// ------------------------------------------------------------
+
+template<typename ArchetypeIdT>
 struct EntityLocation {
     Generation gen = 0;
     Row row = std::numeric_limits<Row>::max();
-    ArchetypeId kind = ArchetypeId::None;
+    ArchetypeIdT kind = ArchetypeIdT::None;
     bool alive = false;
 };
+
+
+// ------------------------------------------------------------
+// Entity handle
+// ------------------------------------------------------------
 
 struct EntityHandle {
     EntityID eid;
     Generation gen;
 
-    bool operator==(const EntityHandle& other) const {
+    static_assert(
+        sizeof(EntityID) == 2 && sizeof(Generation) == 2,
+        "EntityHandle hashing assumes EntityID and Generation are both 16-bit"
+    );
+
+    bool operator==(const EntityHandle& other) const noexcept {
         return eid == other.eid && gen == other.gen;
     }
 
     struct Hash {
-        static_assert((sizeof(eid) == 2 && sizeof(gen) == 2), "Handle hashing failed as assumed 16bit per member");
-        std::size_t operator()(const EntityHandle& h) const {
+        std::size_t operator()(const EntityHandle& h) const noexcept {
             uint32_t packed =
                 (static_cast<uint32_t>(h.gen) << 16) |
                  static_cast<uint32_t>(h.eid);
@@ -69,19 +97,43 @@ struct EntityHandle {
     };
 };
 
-class World {
-public:
-    template<typename... Wanted, typename Func>
-    void queryColumns(Func&& func) {
-        queryColumnsForArchetype<Wanted...>(champions, func);
-        queryColumnsForArchetype<Wanted...>(map, func);
-    }
+namespace std {
+    template <>
+    struct hash<EntityHandle> {
+        std::size_t operator()(const EntityHandle& h) const noexcept {
+            return EntityHandle::Hash{}(h);
+        }
+    };
+}
 
+// ------------------------------------------------------------
+// World
+// ------------------------------------------------------------
+
+template<typename Traits>
+class World {
+private:
+    using ArchetypeId = typename Traits::ArchetypeId;
+    using Location = EntityLocation<ArchetypeId>;
+
+    using ArchetypeSpecs = typename Traits::Archetypes;
+
+    template<typename SpecsTuple>
+    struct ArchetypeTupleFromSpecs;
+
+    template<typename... Specs>
+    struct ArchetypeTupleFromSpecs<std::tuple<Specs...>> {
+        using type = std::tuple<typename Specs::type...>;
+    };
+
+    using ArchetypeStorage =
+        typename ArchetypeTupleFromSpecs<ArchetypeSpecs>::type;
+
+public:
     template<ArchetypeId archetype, typename... Args>
     EntityHandle add(Args&&... components) {
-
-        // Prepare entity ID
         EntityID eid;
+
         if (!free_eid_list_.empty()) {
             eid = free_eid_list_.front();
             free_eid_list_.pop_front();
@@ -90,30 +142,26 @@ public:
             entities.resize(next_eid_);
         }
 
-        Row row = std::numeric_limits<Row>::max();
-        if constexpr (archetype == ArchetypeId::Champion) {
-            row = champions.add(eid, std::forward<Args>(components)...);
-        }
-        else if constexpr (archetype == ArchetypeId::Map) {
-            row = map.add(eid, std::forward<Args>(components)...);
-        }
+        auto& storage = getArchetype<archetype>();
 
-        EntityLocation& e = entities[eid];
+        Row row = storage.add(eid, std::forward<Args>(components)...);
+
+        Location& e = entities[eid];
         e.alive = true;
         e.kind = archetype;
         e.row = row;
 
-        EntityHandle r;
-        r.eid = eid;
-        r.gen = e.gen;
-        
-        return r;
+        return EntityHandle{
+            .eid = eid,
+            .gen = e.gen
+        };
     }
-    
+
     void removeEntity(EntityHandle entity) {
         if (entity.eid >= entities.size()) {
             return;
         }
+
         auto& loc = entities[entity.eid];
 
         if (!loc.alive || loc.gen != entity.gen) {
@@ -121,16 +169,12 @@ public:
         }
 
         RemovedRow removed{};
+        bool found = false;
 
-        switch (loc.kind) {
-            case ArchetypeId::Champion:
-                removed = champions.removeAt(loc.row);
-                break;
-            case ArchetypeId::Map:
-                removed = map.removeAt(loc.row);
-                break;
-            default:
-                throw std::runtime_error("Unsupported archetype in World::add");
+        removeFromMatchingArchetype<0>(loc.kind, loc.row, removed, found);
+
+        if (!found) {
+            throw std::runtime_error("Unsupported archetype in World::removeEntity");
         }
 
         loc.alive = false;
@@ -147,45 +191,107 @@ public:
     template<typename T>
     T* tryGet(EntityHandle entity) {
         if (entity.eid >= entities.size()) {
+            DEBUG_LOG("Entity ID " << entity.eid << " is more than or equal to size entities " << entities.size());
             return nullptr;
         }
 
-        EntityLocation& loc = entities[entity.eid];
+        Location& loc = entities[entity.eid];
 
         if (!loc.alive || loc.gen != entity.gen) {
+            DEBUG_LOG("Not alive or something");
             return nullptr;
         }
 
-        switch (loc.kind) {
-            case ArchetypeId::Champion:
-                if constexpr (archetype_has_components_v<decltype(champions), T>) {
-                    return &champions.template get<T>(loc.row);
-                } else {
-                    return nullptr;
-                }
+        return tryGetFromMatchingArchetype<T, 0>(loc.kind, loc.row);
+    }
 
-            case ArchetypeId::Map:
-                if constexpr (archetype_has_components_v<decltype(map), T>) {
-                    return &map.template get<T>(loc.row);
-                } else {
-                    return nullptr;
-                }
-
-            default:
-                return nullptr;
-        }
+    template<typename... Wanted, typename Func>
+    void queryColumns(Func&& func) {
+        queryColumnsImpl<Wanted...>(
+            std::forward<Func>(func),
+            std::make_index_sequence<std::tuple_size_v<ArchetypeStorage>>{}
+        );
     }
 
 private:
     std::deque<EntityID> free_eid_list_;
     EntityID next_eid_ = 0;
-    std::vector<EntityLocation> entities;
+    std::vector<Location> entities;
 
-    Archetype<Transform, uint32_t, Path, Team, SpawnPoint> champions;
-    Archetype<Transform, uint32_t> map;
+    ArchetypeStorage archetypes_;
+
+private:
+    template<ArchetypeId Id, std::size_t I = 0>
+    auto& getArchetype() {
+        if constexpr (I >= std::tuple_size_v<ArchetypeSpecs>) {
+            static_assert(
+                I < std::tuple_size_v<ArchetypeSpecs>,
+                "ArchetypeId not found in World traits"
+            );
+        } else {
+            using Spec = std::tuple_element_t<I, ArchetypeSpecs>;
+
+            if constexpr (Spec::id == Id) {
+                return std::get<I>(archetypes_);
+            } else {
+                return getArchetype<Id, I + 1>();
+            }
+        }
+    }
+
+    template<std::size_t I>
+    void removeFromMatchingArchetype(
+        ArchetypeId kind,
+        Row row,
+        RemovedRow& removed,
+        bool& found
+    ) {
+        if constexpr (I < std::tuple_size_v<ArchetypeSpecs>) {
+            using Spec = std::tuple_element_t<I, ArchetypeSpecs>;
+
+            if (!found && Spec::id == kind) {
+                removed = std::get<I>(archetypes_).removeAt(row);
+                found = true;
+                return;
+            }
+
+            removeFromMatchingArchetype<I + 1>(kind, row, removed, found);
+        }
+    }
+
+    template<typename T, std::size_t I>
+    T* tryGetFromMatchingArchetype(ArchetypeId kind, Row row) {
+        if constexpr (I >= std::tuple_size_v<ArchetypeSpecs>) {
+            return nullptr;
+        } else {
+            using Spec = std::tuple_element_t<I, ArchetypeSpecs>;
+            using ArchetypeT = typename Spec::type;
+
+            if (Spec::id == kind) {
+                if constexpr (archetype_has_components_v<ArchetypeT, T>) {
+                    return &std::get<I>(archetypes_).template get<T>(row);
+                } else {
+                    return nullptr;
+                }
+            }
+
+            return tryGetFromMatchingArchetype<T, I + 1>(kind, row);
+        }
+    }
+
+    template<typename... Wanted, typename Func, std::size_t... Is>
+    void queryColumnsImpl(Func&& func, std::index_sequence<Is...>) {
+        (
+            queryColumnsForOneArchetype<Wanted...>(
+                std::get<Is>(archetypes_),
+                func
+            ),
+            ...
+        );
+    }
 
     template<typename... Wanted, typename ArchetypeT, typename Func>
-    void queryColumnsForArchetype(ArchetypeT& archetype, Func& func) {
+    void queryColumnsForOneArchetype(ArchetypeT& archetype, Func& func) {
         if constexpr (archetype_has_components_v<ArchetypeT, Wanted...>) {
             func(archetype.template getColumn<Wanted>()...);
         }

@@ -1,18 +1,20 @@
 #pragma once
 
 #include "Game/Control/PlayerCommand.hpp"
-#include "Game/ECS/World.hpp"
+#include "Game/Worlds/ServerWorld.hpp"
 #include "Common/Memory/FIFOQueue.hpp"
 #include "Common/Memory/BiMap.hpp"
 #include "Debug/debug.hpp"
+#include "Game/Transform.hpp"
 
-using ClientCommandQueue = FIFOQueue<ClientCommand>;
+using ClientInputQueue = FIFOQueue<ClientCommand>;
 
-class ClientCommandSystem{
+class ClientInputSystem{
 public:
-    void update(World& world, BiMap<AccountHash, EntityHandle> acc_entity_map) {
+    void update(ServerWorld& world, BiMap<AccountHash, EntityHandle> acc_entity_map) {
         while (auto c = queue_.pop()) {
             auto& hash = c->account_hash;
+            DEBUG_LOG(*hash);
             if(!hash) {
                 DEBUG_LOG("hash not present");
                 continue;
@@ -20,18 +22,20 @@ public:
             EntityHandle* handle = acc_entity_map.findByA(*hash);
             if (handle == nullptr) {
                 DEBUG_LOG("Command recieved from non-assigned");
+                return;
             }
             Transform* t = world.tryGet<Transform>(*handle);
             if (t == nullptr) {
                 DEBUG_LOG("No transform found when applying command");
+                return;
             }
             t->position.x = c->mouse_pos.x;
             t->position.y = c->mouse_pos.y;
         }       
     }
-    ClientCommandQueue& getQueue() {
+    ClientInputQueue& getQueue() {
         return queue_;
     }
 private:
-    ClientCommandQueue queue_;
+    ClientInputQueue queue_;
 };

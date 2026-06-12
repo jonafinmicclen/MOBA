@@ -94,7 +94,8 @@ Renderer::~Renderer() {
 
     glBindVertexArray(0);
     meshes.push_back(std::move(glMesh));
-    return static_cast<MeshId>(meshes.size() - 1);
+    MeshId mid {static_cast<uint32_t>(meshes.size() - 1)};
+    return mid;
 }
 
 
@@ -186,7 +187,7 @@ void Renderer::beginRender() {
 
 
 void Renderer::drawMesh(const MeshId mesh_id, const glm::mat4& model) {
-    GLMesh* mesh = meshes[mesh_id].get();
+    GLMesh* mesh = meshes[mesh_id.id].get();
     if (!mesh) return;
 
     glBindVertexArray(mesh->vao);
@@ -224,16 +225,5 @@ void Renderer::endRender() {
 }
 
 void Renderer::testMesh(glm::vec3 translation) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, (float)translation.x, glm::vec3(0,1,0));
-    model = glm::scale(model, glm::vec3(2.0f));
-    drawMesh(1, model);
-
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f,0.0f,17.0f));
-    model = glm::scale(model, glm::vec3(1.0f));
-    drawMesh(0, model);
 }

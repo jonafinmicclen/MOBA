@@ -18,7 +18,6 @@ GameClient::GameClient() {
     camera_.emplace();
     camera_controller_.emplace(&*camera_);
     input_manager_.emplace();
-    game_ = std::make_unique<Game>();
 
     input_manager_->addListener(InputEventType::Exit, [this](const InputEvent& e) {
         running_ = false;
@@ -26,12 +25,14 @@ GameClient::GameClient() {
 
     registerSendInputCommands();
     
+    duplication_system_.emplace(world_, *packet_distributor_);
+
     renderer_.emplace(window_width_, window_height_);
     renderer_->setCamera(&*camera_);
 
     ResourceManager::instance().init(&*renderer_);
 
-    game_args_handler_.emplace(AssetDatabase::instance(), ResourceManager::instance(), *renderer_, *game_, *packet_distributor_);
+    game_args_handler_.emplace(AssetDatabase::instance(), ResourceManager::instance(), *renderer_, *packet_distributor_, world_);
 
     network_event_distributor_.emplace(*networker_);
 
@@ -50,7 +51,7 @@ GameClient::GameClient() {
 void GameClient::render() {
     renderer_->beginRender();
 
-    game_->getWorld().queryColumns<Transform, MeshId>([this](std::span<Transform> t, std::span<MeshId> id){
+    world_.queryColumns<Transform, MeshId>([this](std::span<Transform> t, std::span<MeshId> id){
         for (size_t i = 0; i < t.size(); ++i) {
             renderer_->drawMesh(id[i], t[i].toMat4());
         }
@@ -66,8 +67,6 @@ void GameClient::run() {
         network_event_distributor_->pump();
         camera_controller_->update(window_width_, window_height_);
         input_manager_->update();
-        // package inputs and send convert screen space pos to world needs camera
-
         render();
 
     }

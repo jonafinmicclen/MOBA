@@ -12,53 +12,83 @@ void Server::initialise() {
 
     net_server_.emplace(net_config); 
     net_adapter_.emplace(*net_server_);
-    game_ = std::make_unique<Game>();
     packet_distributor_.emplace();
     packet_manager_.emplace(*packet_distributor_, *net_server_);
 
+    DEBUG_LOG("Loading config");
     loadConfig();
+    DEBUG_LOG("Config loaded");
 
-    client_auth_manager_.emplace(*packet_distributor_, *net_adapter_, *game_args_);
+    client_auth_manager_.emplace(*packet_distributor_, *net_adapter_, game_args_, account_entity_map_, map_, world_);
     client_command_handler_.emplace(*packet_distributor_, client_command_system_.getQueue(), client_auth_manager_->getMap());
     net_server_->start();
+
+    DEBUG_LOG("INIT DONE");
     
 }
 
 
 void Server::loadConfig() {
+    // Just loading things into memory no world state
 
     GameArgs args("RuntimeData/game_args.json");
 
+    // Load map
     ResourceManager::instance().loadAsset(args.map);
-    game_->setMap(args.map);
     MapDef map = PlaceholderMapDef::getMap();
+    map_ = map;
+
+    DEBUG_LOG("Loading players");
 
     for (auto& player : args.players) {
         ResourceManager::instance().loadAsset(player.character);
-        SpawnPoint player_spawn = map.spawn_points[player.player_idx];
-        Path p;
-        EntityHandle handle = game_->getWorld().add<ArchetypeId::Champion>(
-            player_spawn.point, 0, p, player.team, player_spawn
-        );
-        account_entity_map_.insert(player.account, handle);
-
     }
 
     game_args_ = std::move(args);
-    // By this point the loader will have returned MapDef and CharDef instances containing spawn points and etc
-    
-    // Initialise world
-    //World world = game_->getWorld();
-    //world.add<ArchetypeId::Champion>()
+}
+
+void Server::initialiseWorld() {
+    //for (auto& player : game_args_.players) {
+    //    // Create the player entity
+    //    SpawnPoint player_spawn = map_.spawn_points[player.player_idx];
+    //    Transform spawn_transform;
+    //    spawn_transform.position.x = player_spawn.point.x;
+    //    spawn_transform.position.y = player_spawn.point.y;
+    //    Path p;
+    //    EntityHandle handle = world_.add<ServerArchetypeId::Champion>(
+    //        spawn_transform, p, player.team, player_spawn
+    //    );
+    //    // Emit spawn packet for clients
+    //    SpawnCommand c;
+    //    c.entity = player.character;
+    //    c.position = spawn_transform;
+    //    c.server_handle = handle;
+    //    SpawnPacket pkt;
+    //    pkt.setData(c);
+//
+    //    net_adapter_->sendPacket(&pkt, Channel::RELIABLECOMMANDS, {});
+//
+    //    // Register ownership to client
+    //    EntityOwnershipPacket ownership_pkt;
+    //    EntityOwnershipUpdate ownership_updt {handle};
+    //    ownership_pkt.setData(ownership_updt);
+    //    DEBUG_LOG("Mapping " << player.account << " to " << handle.eid << handle.gen);
+    //    account_entity_map_.insert(player.account, handle);
+    //    auto target_peer = client_auth_manager_->getMap().find(player.account);
+    //    assert(target_peer && "Peer not assigned when sending ownership");
+    //    net_adapter_->sendPacket(&ownership_pkt, Channel::RELIABLECOMMANDS, {*target_peer});
+    //}
 }
 
 
 void Server::simulate() {
     initialise();
+    //initialiseWorld();
     running = true;
     DEBUG_LOG("---RUNNING---");
 
     while (running) {
         packet_manager_->pump();
+        client_command_system_.update(world_, account_entity_map_);
     }
 }

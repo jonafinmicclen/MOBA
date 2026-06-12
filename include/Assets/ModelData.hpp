@@ -7,7 +7,9 @@
 #include <memory>
 #include <cstdint>
 
-using MeshId = uint32_t;
+struct MeshId{
+    uint32_t id;
+};
 
 struct Keyframe {
     float time;

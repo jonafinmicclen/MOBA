@@ -9,7 +9,6 @@
 
 #include "Renderer/Renderer.hpp"
 
-#include "Game/Game.hpp"
 #include "Game/ObjectState.hpp"
 #include "Game/Maps/MapFactory.hpp"
 #include "Game/Maps/SummonersRift.hpp"
@@ -35,7 +34,10 @@
 
 #include "GameClient/Packets/ClientAuthenticationPacket.hpp"
 #include "GameClient/Packets/GameArgsPacket.hpp"
+#include "Game/Worlds/ClientWorld.hpp"
 #include "GameClient/Net/GameArgsHandler.hpp"
+
+#include "GameClient/Duplication/DuplicationSystem.hpp"
 
 
 class GameClient {
@@ -57,8 +59,6 @@ private:
     std::optional<PacketDistributor> packet_distributor_;
     std::optional<PacketManager> packet_manager_;
 
-    std::unique_ptr<Game> game_;
-
     std::optional<GameArgsHandler> game_args_handler_;
 
     std::optional<Renderer> renderer_;
@@ -66,8 +66,11 @@ private:
 
     std::optional<CameraController> camera_controller_;
     std::optional<InputManager> input_manager_; 
-    
 
+    std::optional<DuplicationSystem> duplication_system_;
+
+    ClientWorld world_;
+    
     int window_width_ = 1920;
     int window_height_ = 1080;
 

@@ -3,6 +3,8 @@
 #include "Networking/Core/NetCommon.hpp"
 #include "Networking/Message/NetMessage.hpp"
 
+#include <optional>
+
 #include <vector>
 
 struct PacketMetadata {

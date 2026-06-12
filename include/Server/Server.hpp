@@ -13,10 +13,12 @@
 #include "Common/Memory/FIFOQueue.hpp"
 #include "Common/Memory/BiMap.hpp"
 #include "Server/CommandHandler.hpp"
-#include "Game/ECS/Systems/ClientCommandSystem.hpp"
+#include "Game/ECS/Systems/ClientInputSystem.hpp"
+
+#include "Game/Packets/SpawnPacket.hpp"
 
 #include "Server/AccountCharacterBiMap.hpp"
-
+#include "Game/Packets/EntityOwnershipPacket.hpp"
 #include "GameClient/Packets/ClientAuthenticationPacket.hpp"
 #include "GameClient/Packets/GameArgsPacket.hpp"
 
@@ -25,7 +27,6 @@
 #include "Networking/Session/PeerDirectory.hpp"
 
 #include "Assets/ResourceManager.hpp"
-#include "Game/Game.hpp"
 
 #include <optional>
 #include <unordered_map>
@@ -35,38 +36,42 @@
 
 #include "Game/Placeholder/PlaceholderMapDef.hpp"
 
+#include "Game/Worlds/ServerWorld.hpp"
+
 using json = nlohmann::json;
 
 using user_id = std::string;
 using client_id = uint8_t;
-using ClientCommandQueue = FIFOQueue<ClientCommand>;
 
 class Server {
 public:
     void simulate();
     void exit() {running = false;}
-    void pushClientCommandQueue(ClientCommand c) {client_command_system_.getQueue().push(c);}
+    void pushClientInputSystem(ClientCommand c) {client_command_system_.getQueue().push(c);}
 
 private:
     void initialise();
     void loadConfig();
+    void initialiseWorld();
 
-    std::unique_ptr<Game> game_;
+    // Game state
+    ServerWorld world_;
+    MapDef map_;
+    GameArgs game_args_ = GameArgs("RuntimeData/game_args.json");
+    BiMap<AccountHash, EntityHandle> account_entity_map_;
 
+    // Networking
     std::optional<Networker> net_server_;
     std::optional<NetAdapter> net_adapter_;
-
-    std::optional<PacketDistributor> packet_distributor_;
     std::optional<PacketManager> packet_manager_;
+    std::optional<PacketDistributor> packet_distributor_;
 
+    // Services
     std::optional<ClientAuthManager> client_auth_manager_;
-    std::optional<CommandHandler> client_command_handler_;
-    
-    std::optional<GameArgs> game_args_;
     
     // Runtime systems
-    ClientCommandSystem client_command_system_;
+    ClientInputSystem client_command_system_;
+    std::optional<CommandHandler> client_command_handler_;
 
     bool running = false;
-    BiMap<AccountHash, EntityHandle> account_entity_map_;
 };

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 #include "Common/Coordinates/WorldSpacePos.hpp"
 #include <optional>
