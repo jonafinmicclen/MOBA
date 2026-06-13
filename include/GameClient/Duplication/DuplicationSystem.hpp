@@ -62,13 +62,23 @@ private:
         owned_handle_->handle = pkt.getData().server_handle;
     }
     void entityStateHandler(const EntityStatePacket& pkt, const PacketMetadata& metadata) {
-        // Update state in world
+        auto& data = pkt.getData();
+        ServerHandle s_handle {data.handle};
+        ClientHandle* c_handle = client_to_server_handle_.findByB(s_handle);
+        if (c_handle == nullptr) {
+            DEBUG_LOG("Server to client handle not assigned when recieving state update");
+            return;
+        }
+        *world_.tryGet<Transform>(c_handle->handle) = data.new_transform;
     }
     void spawnHandler(const SpawnPacket& pkt, const PacketMetadata& metadata) {
         MeshId mesh = ResourceManager::instance().getAsset(pkt.getData().entity)->mesh_id;
         // Later should use the name/hash to lookup archetype and other initialiser data in database or res manager can do it
         
-        world_.add<ClientArchetypeId::Champion>(pkt.getData().position, mesh, pkt.getData().server_handle);
+        EntityHandle c_handle = world_.add<ClientArchetypeId::Champion>(pkt.getData().position, mesh, pkt.getData().server_handle);
+        ClientHandle client_handle {c_handle};
+        ServerHandle server_handle {pkt.getData().server_handle};
+        client_to_server_handle_.insert(client_handle, server_handle);
     }
 
     void registerHandlers(PacketDistributor& distributor) {

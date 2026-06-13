@@ -1,9 +1,22 @@
 #pragma once
 
 #include "Game/Worlds/ServerWorld.hpp"
+#include "Game/Packets/EntityStatePacket.hpp"
+#include "Adapter/NetAdapter.hpp"
 
 class StateSnapshotSystem{
-    void update(ServerWorld& world) {
-        //world.queryColumns<Transform>
+public:
+    void update(ServerWorld& world, NetAdapter& net_adapter) {
+        world.queryEntities<Transform>(
+            [&net_adapter](EntityHandle handle, Transform transform) {
+                EntityStateUpdate data;
+                data.affected_fields = EntityFieldIdentifier::Transform;
+                data.handle = handle;
+                data.new_transform = transform;
+                EntityStatePacket pkt;
+                pkt.setData(data);
+                net_adapter.sendPacket(&pkt, Channel::STATEUPDATES, {});
+            }
+        );
     }
 };

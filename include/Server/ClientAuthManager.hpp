@@ -44,6 +44,7 @@ public:
         game_map_(game_map),
         world_(world)
         {
+        DEBUG_LOG("Game will start when " << (game_args_.players.size()) << " players are connected.");
         initListener(distributor);
     }
     PeerDirectory& getMap() {return map_;}
@@ -70,10 +71,14 @@ private:
             // Disconnect them
             return;
         }
-        auto character = game_args_.player_account_map.characterFor(*acc_id);
-        if (!character) {
+        auto character = game_args_.player_account_map_onedir.find(*acc_id);
+        if (character == game_args_.player_account_map_onedir.end()) {
             // Disconnect them
-            DEBUG_LOG((int)metadata.ids[0] << "disconnected as no character in map");
+            DEBUG_LOG("Peer " << (int)metadata.ids[0] << " disconnected as no character assigned for account hash " << *acc_id << " in map");
+            DEBUG_LOG("Assigned hashes are: ");
+            for (auto& c : game_args_.players) {
+                DEBUG_LOG(c.account);
+            }
             networker_.command(DisconnectCmd(metadata.ids[0]));
             return;
         }
@@ -94,9 +99,7 @@ private:
     bool shouldBeginGame() {
         // Should never be more than but oh well
         // This also does not take into account disconnects...
-        //return connected_players_ >= game_args_.players.size();
-        // 1 for testing
-        return connected_players_ >= 1;
+        return connected_players_ >= game_args_.players.size();
     }
 
     void beginGame() {

@@ -2,6 +2,8 @@
 
 
 #include <memory>
+#include <chrono>
+#include <thread>
 
 #include "Networking/Core/Networker.hpp"
 #include "Networking/Packets/PacketTypes.hpp"
@@ -21,7 +23,7 @@
 #include "Game/Packets/EntityOwnershipPacket.hpp"
 #include "GameClient/Packets/ClientAuthenticationPacket.hpp"
 #include "GameClient/Packets/GameArgsPacket.hpp"
-
+#include "Game/ECS/Systems/StateSnapshotSystem.hpp"
 #include "Common/Player/AccountID.hpp"
 
 #include "Networking/Session/PeerDirectory.hpp"
@@ -72,6 +74,7 @@ private:
     // Runtime systems
     ClientInputSystem client_command_system_;
     std::optional<CommandHandler> client_command_handler_;
+    StateSnapshotSystem state_snapshot_system_;
 
     bool running = false;
 };

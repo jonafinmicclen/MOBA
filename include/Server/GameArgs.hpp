@@ -3,6 +3,8 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+#include "Debug/debug.hpp"
+
 #include <fstream>
 #include <vector>
 #include <stdexcept>
@@ -28,6 +30,7 @@ struct GameArgs {
     std::string map;
     std::vector<Player> players;
     AccountCharacterBiMap player_account_map;
+    std::unordered_map<std::string, std::string> player_account_map_onedir;
 
     GameArgs(const std::string path) {
         std::ifstream f(path);
@@ -52,7 +55,9 @@ struct GameArgs {
             player.player_idx = i++;
 
             players.push_back(player);
+            DEBUG_LOG("Binding " << player.account << " to " << player.character);
             player_account_map.bind(player.account, player.character);
+            player_account_map_onedir[player.account] = player.character;
         }
     }
 };

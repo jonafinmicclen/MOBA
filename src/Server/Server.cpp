@@ -30,21 +30,17 @@ void Server::initialise() {
 
 void Server::loadConfig() {
     // Just loading things into memory no world state
-
-    GameArgs args("RuntimeData/game_args.json");
-
     // Load map
-    ResourceManager::instance().loadAsset(args.map);
+    ResourceManager::instance().loadAsset(game_args_.map);
     MapDef map = PlaceholderMapDef::getMap();
     map_ = map;
 
     DEBUG_LOG("Loading players");
 
-    for (auto& player : args.players) {
+    for (auto& player : game_args_.players) {
         ResourceManager::instance().loadAsset(player.character);
     }
 
-    game_args_ = std::move(args);
 }
 
 void Server::initialiseWorld() {
@@ -83,12 +79,28 @@ void Server::initialiseWorld() {
 
 void Server::simulate() {
     initialise();
-    //initialiseWorld();
+
     running = true;
     DEBUG_LOG("---RUNNING---");
 
+    using clock = std::chrono::steady_clock;
+
+    constexpr auto snapshot_interval = std::chrono::milliseconds(500); // 20 snapshots/sec
+    auto next_snapshot_time = clock::now();
+
     while (running) {
         packet_manager_->pump();
+
         client_command_system_.update(world_, account_entity_map_);
+
+        const auto now = clock::now();
+
+        if (now >= next_snapshot_time) {
+            state_snapshot_system_.update(world_, *net_adapter_);
+
+            next_snapshot_time = now + snapshot_interval;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }

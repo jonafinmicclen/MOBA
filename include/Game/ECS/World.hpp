@@ -146,14 +146,14 @@ public:
 
         Row row = storage.add(eid, std::forward<Args>(components)...);
 
-        Location& e = entities[eid];
-        e.alive = true;
-        e.kind = archetype;
-        e.row = row;
+        Location& loc = entities[eid];
+        loc.alive = true;
+        loc.kind = archetype;
+        loc.row = row;
 
         return EntityHandle{
             .eid = eid,
-            .gen = e.gen
+            .gen = loc.gen
         };
     }
 
@@ -162,7 +162,7 @@ public:
             return;
         }
 
-        auto& loc = entities[entity.eid];
+        Location& loc = entities[entity.eid];
 
         if (!loc.alive || loc.gen != entity.gen) {
             return;
@@ -179,30 +179,44 @@ public:
 
         loc.alive = false;
         loc.gen++;
+        loc.row = std::numeric_limits<Row>::max();
+        loc.kind = ArchetypeId::None;
 
         if (removed.moved) {
-            auto& moved_loc = entities[removed.moved_entity_id];
-            moved_loc.row = removed.new_location;
+            Location& movedLoc = entities[removed.moved_entity_id];
+            movedLoc.row = removed.new_location;
         }
 
         free_eid_list_.push_front(entity.eid);
     }
 
+    bool isAlive(EntityHandle entity) const {
+        if (entity.eid >= entities.size()) {
+            return false;
+        }
+
+        const Location& loc = entities[entity.eid];
+        return loc.alive && loc.gen == entity.gen;
+    }
+
     template<typename T>
     T* tryGet(EntityHandle entity) {
-        if (entity.eid >= entities.size()) {
-            DEBUG_LOG("Entity ID " << entity.eid << " is more than or equal to size entities " << entities.size());
+        Location* loc = tryGetLocation(entity);
+        if (!loc) {
             return nullptr;
         }
 
-        Location& loc = entities[entity.eid];
+        return tryGetFromMatchingArchetype<T, 0>(loc->kind, loc->row);
+    }
 
-        if (!loc.alive || loc.gen != entity.gen) {
-            DEBUG_LOG("Not alive or something");
+    template<typename T>
+    const T* tryGet(EntityHandle entity) const {
+        const Location* loc = tryGetLocation(entity);
+        if (!loc) {
             return nullptr;
         }
 
-        return tryGetFromMatchingArchetype<T, 0>(loc.kind, loc.row);
+        return tryGetFromMatchingArchetypeConst<T, 0>(loc->kind, loc->row);
     }
 
     template<typename... Wanted, typename Func>
@@ -213,6 +227,57 @@ public:
         );
     }
 
+    template<typename... Wanted, typename Func>
+    void queryColumns(Func&& func) const {
+        queryColumnsImplConst<Wanted...>(
+            std::forward<Func>(func),
+            std::make_index_sequence<std::tuple_size_v<ArchetypeStorage>>{}
+        );
+    }
+
+    /*
+        Calls:
+
+            func(EntityHandle handle, Wanted&... components)
+
+        The archetype only stores EntityID. This function converts:
+
+            EntityID -> EntityHandle
+
+        by reading the generation from World::entities.
+    */
+    template<typename... Wanted, typename Func>
+    void queryEntities(Func&& func) {
+        queryEntitiesImpl<Wanted...>(
+            std::forward<Func>(func),
+            std::make_index_sequence<std::tuple_size_v<ArchetypeStorage>>{}
+        );
+    }
+
+    /*
+        Const version calls:
+
+            func(EntityHandle handle, const Wanted&... components)
+    */
+    template<typename... Wanted, typename Func>
+    void queryEntities(Func&& func) const {
+        queryEntitiesImplConst<Wanted...>(
+            std::forward<Func>(func),
+            std::make_index_sequence<std::tuple_size_v<ArchetypeStorage>>{}
+        );
+    }
+
+    EntityHandle handleFromEntityId(EntityID eid) const {
+        assert(eid < entities.size());
+
+        const Location& loc = entities[eid];
+
+        return EntityHandle{
+            .eid = eid,
+            .gen = loc.gen
+        };
+    }
+
 private:
     std::deque<EntityID> free_eid_list_;
     EntityID next_eid_ = 0;
@@ -221,8 +286,54 @@ private:
     ArchetypeStorage archetypes_;
 
 private:
+    Location* tryGetLocation(EntityHandle entity) {
+        if (entity.eid >= entities.size()) {
+            return nullptr;
+        }
+
+        Location& loc = entities[entity.eid];
+
+        if (!loc.alive || loc.gen != entity.gen) {
+            return nullptr;
+        }
+
+        return &loc;
+    }
+
+    const Location* tryGetLocation(EntityHandle entity) const {
+        if (entity.eid >= entities.size()) {
+            return nullptr;
+        }
+
+        const Location& loc = entities[entity.eid];
+
+        if (!loc.alive || loc.gen != entity.gen) {
+            return nullptr;
+        }
+
+        return &loc;
+    }
+
     template<ArchetypeId Id, std::size_t I = 0>
     auto& getArchetype() {
+        if constexpr (I >= std::tuple_size_v<ArchetypeSpecs>) {
+            static_assert(
+                I < std::tuple_size_v<ArchetypeSpecs>,
+                "ArchetypeId not found in World traits"
+            );
+        } else {
+            using Spec = std::tuple_element_t<I, ArchetypeSpecs>;
+
+            if constexpr (Spec::id == Id) {
+                return std::get<I>(archetypes_);
+            } else {
+                return getArchetype<Id, I + 1>();
+            }
+        }
+    }
+
+    template<ArchetypeId Id, std::size_t I = 0>
+    const auto& getArchetype() const {
         if constexpr (I >= std::tuple_size_v<ArchetypeSpecs>) {
             static_assert(
                 I < std::tuple_size_v<ArchetypeSpecs>,
@@ -279,6 +390,26 @@ private:
         }
     }
 
+    template<typename T, std::size_t I>
+    const T* tryGetFromMatchingArchetypeConst(ArchetypeId kind, Row row) const {
+        if constexpr (I >= std::tuple_size_v<ArchetypeSpecs>) {
+            return nullptr;
+        } else {
+            using Spec = std::tuple_element_t<I, ArchetypeSpecs>;
+            using ArchetypeT = typename Spec::type;
+
+            if (Spec::id == kind) {
+                if constexpr (archetype_has_components_v<ArchetypeT, T>) {
+                    return &std::get<I>(archetypes_).template get<T>(row);
+                } else {
+                    return nullptr;
+                }
+            }
+
+            return tryGetFromMatchingArchetypeConst<T, I + 1>(kind, row);
+        }
+    }
+
     template<typename... Wanted, typename Func, std::size_t... Is>
     void queryColumnsImpl(Func&& func, std::index_sequence<Is...>) {
         (
@@ -290,10 +421,112 @@ private:
         );
     }
 
+    template<typename... Wanted, typename Func, std::size_t... Is>
+    void queryColumnsImplConst(Func&& func, std::index_sequence<Is...>) const {
+        (
+            queryColumnsForOneArchetypeConst<Wanted...>(
+                std::get<Is>(archetypes_),
+                func
+            ),
+            ...
+        );
+    }
+
     template<typename... Wanted, typename ArchetypeT, typename Func>
     void queryColumnsForOneArchetype(ArchetypeT& archetype, Func& func) {
         if constexpr (archetype_has_components_v<ArchetypeT, Wanted...>) {
             func(archetype.template getColumn<Wanted>()...);
+        }
+    }
+
+    template<typename... Wanted, typename ArchetypeT, typename Func>
+    void queryColumnsForOneArchetypeConst(const ArchetypeT& archetype, Func& func) const {
+        if constexpr (archetype_has_components_v<ArchetypeT, Wanted...>) {
+            func(archetype.template getColumn<Wanted>()...);
+        }
+    }
+
+    template<typename... Wanted, typename Func, std::size_t... Is>
+    void queryEntitiesImpl(Func&& func, std::index_sequence<Is...>) {
+        (
+            queryEntitiesForOneArchetype<Wanted...>(
+                std::get<Is>(archetypes_),
+                func
+            ),
+            ...
+        );
+    }
+
+    template<typename... Wanted, typename Func, std::size_t... Is>
+    void queryEntitiesImplConst(Func&& func, std::index_sequence<Is...>) const {
+        (
+            queryEntitiesForOneArchetypeConst<Wanted...>(
+                std::get<Is>(archetypes_),
+                func
+            ),
+            ...
+        );
+    }
+
+    template<typename... Wanted, typename ArchetypeT, typename Func>
+    void queryEntitiesForOneArchetype(ArchetypeT& archetype, Func& func) {
+        if constexpr (archetype_has_components_v<ArchetypeT, Wanted...>) {
+            std::span<const EntityID> ids = archetype.getEntityIds();
+
+            for (std::size_t i = 0; i < ids.size(); ++i) {
+                EntityID eid = ids[i];
+
+                if (eid >= entities.size()) {
+                    continue;
+                }
+
+                const Location& loc = entities[eid];
+
+                if (!loc.alive) {
+                    continue;
+                }
+
+                EntityHandle handle{
+                    .eid = eid,
+                    .gen = loc.gen
+                };
+
+                func(
+                    handle,
+                    archetype.template getColumn<Wanted>()[i]...
+                );
+            }
+        }
+    }
+
+    template<typename... Wanted, typename ArchetypeT, typename Func>
+    void queryEntitiesForOneArchetypeConst(const ArchetypeT& archetype, Func& func) const {
+        if constexpr (archetype_has_components_v<ArchetypeT, Wanted...>) {
+            std::span<const EntityID> ids = archetype.getEntityIds();
+
+            for (std::size_t i = 0; i < ids.size(); ++i) {
+                EntityID eid = ids[i];
+
+                if (eid >= entities.size()) {
+                    continue;
+                }
+
+                const Location& loc = entities[eid];
+
+                if (!loc.alive) {
+                    continue;
+                }
+
+                EntityHandle handle{
+                    .eid = eid,
+                    .gen = loc.gen
+                };
+
+                func(
+                    handle,
+                    archetype.template getColumn<Wanted>()[i]...
+                );
+            }
         }
     }
 };
