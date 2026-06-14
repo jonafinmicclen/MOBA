@@ -85,7 +85,7 @@ void Server::simulate() {
 
     using clock = std::chrono::steady_clock;
 
-    constexpr auto snapshot_interval = std::chrono::milliseconds(500); // 20 snapshots/sec
+    constexpr auto snapshot_interval = std::chrono::milliseconds(30); // 20 snapshots/sec
     auto next_snapshot_time = clock::now();
 
     while (running) {
@@ -101,6 +101,6 @@ void Server::simulate() {
             next_snapshot_time = now + snapshot_interval;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }

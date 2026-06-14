@@ -72,6 +72,7 @@ private:
             return;
         }
         auto character = game_args_.player_account_map_onedir.find(*acc_id);
+        
         if (character == game_args_.player_account_map_onedir.end()) {
             // Disconnect them
             DEBUG_LOG("Peer " << (int)metadata.ids[0] << " disconnected as no character assigned for account hash " << *acc_id << " in map");
@@ -82,6 +83,7 @@ private:
             networker_.command(DisconnectCmd(metadata.ids[0]));
             return;
         }
+
         auto peer = metadata.ids[0];
         map_.addAccount(*acc_id, peer);
 

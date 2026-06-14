@@ -72,8 +72,10 @@ private:
     std::optional<ClientAuthManager> client_auth_manager_;
     
     // Runtime systems
+    // Takes client inputs from queue filled by handler and applies them in game
     ClientInputSystem client_command_system_;
     std::optional<CommandHandler> client_command_handler_;
+    // Broadcasts state updates from the game world
     StateSnapshotSystem state_snapshot_system_;
 
     bool running = false;

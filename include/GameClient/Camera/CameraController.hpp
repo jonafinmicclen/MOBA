@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameClient/Camera/Camera.hpp"
+#include "Common/Math/Rect.hpp"
 
 #include "Debug/debug.hpp"
 
@@ -11,4 +12,5 @@ class CameraController {
     private:
     void moveCameraTowardsMouse(const int window_width, const int window_height);
     Camera* camera;
+    
 };

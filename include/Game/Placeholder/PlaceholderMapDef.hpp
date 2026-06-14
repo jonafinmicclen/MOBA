@@ -14,6 +14,8 @@ namespace PlaceholderMapDef {
         sp.team = {0};
         m.spawn_points.push_back(sp);
         m.model_path = "assets/Maps/SummonersRift.glb";
+        m.map_boundary.min_corner = {-12,12};
+        m.map_boundary.max_corner = {12, -12};
         return m;
     }
 };

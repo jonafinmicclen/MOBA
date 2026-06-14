@@ -1,6 +1,7 @@
 #include "GameClient/Camera/CameraController.hpp"
 
 #include <SDL2/SDL.h>
+#include <algorithm>
 
 
 void CameraController::update(const int window_width, const int window_height) {
@@ -26,6 +27,9 @@ void CameraController::moveCameraTowardsMouse(const int window_width, const int 
         dx += x_from_centre / inverse_pan_speed;
         dy -= y_from_centre / inverse_pan_speed;
     }
+
+    //dx = std::min(abs(12.0f - abs(x)), dx);
+    //dy = std::min(abs(12.0f - abs(y)), dy);
     
     camera->moveCameraPos2D({dx, dy});
 

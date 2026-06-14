@@ -59,7 +59,7 @@ private:
         auto& mesh_id = a->mesh_id;
 
         Transform t;
-        t.position = {0.0f,0.0f,17.0f};
+        t.position = {0.0f,0.0f,17.5f};
         world_.add<ClientArchetypeId::Map>(t, mesh_id);
 
 

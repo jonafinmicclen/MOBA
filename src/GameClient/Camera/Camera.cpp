@@ -19,8 +19,8 @@ glm::mat4 Camera::getProjection(float aspectRatio) const {
     );
 }
 
-void Camera::moveCameraPos2D(const glm::vec2 delta) {
-    // Moves camera orthoganally to Up
+void Camera::moveCameraPos2D(const glm::vec2 delta)
+{
     glm::vec3 forward = glm::normalize(target - pos);
     glm::vec3 right   = glm::normalize(glm::cross(forward, up));
 
@@ -32,8 +32,18 @@ void Camera::moveCameraPos2D(const glm::vec2 delta) {
         right * delta.x +
         groundForward * delta.y;
 
-    pos    += move;
-    target += move;
+    glm::vec3 newPos = pos + move;
+
+    // Hardcoded XY camera-position boundary.
+    newPos.x = glm::clamp(newPos.x, -3.0f, 3.0f);
+    newPos.y = glm::clamp(newPos.y, -3.0f, 3.0f);
+
+    // Apply only the movement that survived the clamp.
+    glm::vec3 actualMove = newPos - pos;
+
+    pos    += actualMove;
+    target += actualMove;
+
 }
 
 void Camera::setCameraPos2D(const WorldSpacePos position) {

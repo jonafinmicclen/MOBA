@@ -5,6 +5,8 @@
 
 #include "Game/Match/SpawnPoint.hpp"
 
+#include "Common/Math/Rect.hpp"
+
 
 struct MapDef{
     std::string id{};
@@ -13,4 +15,5 @@ struct MapDef{
     uint8_t max_players{};
     std::vector<SpawnPoint> spawn_points;
     std::string model_path {};
+    Rect map_boundary;
 };

@@ -59,7 +59,7 @@ void Networker::loop(std::stop_token st) {
 void Networker::sendQueues() {
     while (auto message = outgoing_queue_.popQueue()) {
 
-        DEBUG_LOG("Message sent");
+        //DEBUG_LOG("Message sent");
 
         bool queued = false;
 
@@ -151,7 +151,7 @@ void Networker::onRecieve(const ENetEvent& e) {
 
     incoming_queue_.pushQueue(std::move(message));
 
-    DEBUG_LOG("Message recieved");
+    //DEBUG_LOG("Message recieved");
 
     onRecieveCompute(e);
     enet_packet_destroy(e.packet);
