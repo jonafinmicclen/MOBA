@@ -5,10 +5,10 @@ Renderer::~Renderer() {
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
-void Renderer::uploadAssetMesh(Asset* asset) {
+[[nodiscard]] MeshId Renderer::uploadAssetMesh(Asset* asset) {
     if (!asset || !asset->mesh) {
         std::cout << "[Renderer] Failed to load mesh" << std::endl;
-        return;
+        return std::numeric_limits<MeshId>::max();
     }
 
     MeshData* mesh = asset->mesh.get();
@@ -93,7 +93,9 @@ void Renderer::uploadAssetMesh(Asset* asset) {
     }
 
     glBindVertexArray(0);
-    mesh_map[asset->name] = std::move(glMesh);
+    meshes.push_back(std::move(glMesh));
+    MeshId mid {static_cast<uint32_t>(meshes.size() - 1)};
+    return mid;
 }
 
 
@@ -184,8 +186,8 @@ void Renderer::beginRender() {
 }
 
 
-void Renderer::drawMesh(const std::string& mesh_name, const glm::mat4& model) {
-    GLMesh* mesh = mesh_map.at(mesh_name).get();
+void Renderer::drawMesh(const MeshId mesh_id, const glm::mat4& model) {
+    GLMesh* mesh = meshes[mesh_id.id].get();
     if (!mesh) return;
 
     glBindVertexArray(mesh->vao);
@@ -223,16 +225,5 @@ void Renderer::endRender() {
 }
 
 void Renderer::testMesh(glm::vec3 translation) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, (float)translation.x, glm::vec3(0,1,0));
-    model = glm::scale(model, glm::vec3(2.0f));
-    drawMesh("Naren", model);
-
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f,0.0f,17.0f));
-    model = glm::scale(model, glm::vec3(1.0f));
-    drawMesh("Summoners Rift", model);
 }

@@ -2,9 +2,9 @@
 
 #include "Networking/Packets/PacketDistributor.hpp"
 #include "GameClient/Packets/GameArgsPacket.hpp"
+#include "Game/Worlds/ClientWorld.hpp"
 
 #include "Renderer/Renderer.hpp"
-#include "Game/Game.hpp"
 
 class GameArgsHandler {
 public:
@@ -12,9 +12,10 @@ public:
         AssetDatabase& asset_db,
         ResourceManager& res,
         Renderer& renderer,
-        Game& game,
-        PacketDistributor& distributor)
-            : asset_db_(asset_db), res_(res), renderer_(renderer), game_(game) {
+        PacketDistributor& distributor,
+        ClientWorld& world    
+    )
+            : asset_db_(asset_db), res_(res), renderer_(renderer), world_(world) {
                 registerListener(distributor);
             }
 
@@ -26,14 +27,18 @@ private:
     }
 
     void applyGameArgs(const json& game_args) {
-        validate(game_args);
-
-        if (loaded()) {
-            if (game_args == *loaded_args_) return;
-        } else {
-            DEBUG_LOG("args previously loaded but are different");
+        if (!validate(game_args)) {
+            DEBUG_LOG("Canceled game args application");
+            return;
         }
 
+        if (loaded()) {
+            if (game_args == *loaded_args_) {
+                return;
+            } else {
+                DEBUG_LOG("args previously loaded but are different");
+            }
+        }
         // Load assets + upload
         for (const auto& asset_name_j : game_args.at("all_assets")) {
             const std::string asset_name = asset_name_j.get<std::string>();
@@ -45,17 +50,18 @@ private:
                 DEBUG_LOG("asset was null after load: " << asset_name);
                 continue;
             }
-            renderer_.uploadAssetMesh(asset);
-            DEBUG_LOG("loaded+uploaded " << asset_name);
+            DEBUG_LOG("Loaded asset, name: " << asset_name);
         }
 
         // Map
-        const std::string map = game_args.at("map").get<std::string>();
-        game_.setMap(map);
+        const std::string map_name = game_args.at("map").get<std::string>();
+        Asset* a = res_.getAsset(map_name);
+        auto& mesh_id = a->mesh_id;
 
-        // Active character (store somewhere later)
-        const std::string active_char = game_args.at("active_character").get<std::string>();
-        active_character_ = active_char;
+        Transform t;
+        t.position = {0.0f,0.0f,17.5f};
+        world_.add<ClientArchetypeId::Map>(t, mesh_id);
+
 
         DEBUG_LOG("assets loaded");
 
@@ -77,20 +83,22 @@ private:
         >::register_pkt();
     }
 
-    static void validate(const json& j) {
-        for (auto key : {"map", "active_character", "all_assets"}) {
+    static inline bool validate(const json& j) noexcept {
+        for (auto key : {"map", "all_assets"}) {
             if (!j.contains(key)) {
-                DEBUG_LOG("missing required arg: " << key);
+                DEBUG_LOG("Packet missing required \"" << key << "\"");
+                return false;
             }
         }
+        return true;
     }
 
     AssetDatabase& asset_db_;
     ResourceManager& res_;
     Renderer& renderer_;
-    Game& game_;
+    ClientWorld& world_;
     std::string active_character_;
 
-    std::optional<json> loaded_args_;
+    std::optional<json> loaded_args_ = std::nullopt;
     bool loaded_;
 };

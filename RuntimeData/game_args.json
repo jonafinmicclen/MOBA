@@ -1,6 +1,30 @@
 {
   "map": "Summoners Rift",
-  "players": {
-    "45678": "Naren"
-  }
+  "players": [
+    {
+      "account": "1",
+      "character": "Naren",
+      "team": 0,
+      "spawnpoint": 0
+    },
+        {
+      "account": "2",
+      "character": "Naren",
+      "team": 0,
+      "spawnpoint": 0
+    },
+        {
+      "account": "3",
+      "character": "Naren",
+      "team": 0,
+      "spawnpoint": 0
+    },
+        {
+      "account": "4",
+      "character": "Naren",
+      "team": 0,
+      "spawnpoint": 0
+    }
+    
+  ]
 }

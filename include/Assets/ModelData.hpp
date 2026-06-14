@@ -7,6 +7,10 @@
 #include <memory>
 #include <cstdint>
 
+struct MeshId{
+    uint32_t id;
+};
+
 struct Keyframe {
     float time;
     glm::vec3 translation;
@@ -61,5 +65,6 @@ struct Asset {
     std::unique_ptr<MeshData> mesh;
     std::vector<std::shared_ptr<Material>> materials;
     std::vector<AnimationData> animations;
+    MeshId mesh_id;
     std::string name;
 };

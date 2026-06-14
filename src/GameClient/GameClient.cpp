@@ -18,15 +18,21 @@ GameClient::GameClient() {
     camera_.emplace();
     camera_controller_.emplace(&*camera_);
     input_manager_.emplace();
-    game_ = std::make_unique<Game>();
 
-    exit_listener_.emplace(&running_);
-    input_manager_->addListener(&*exit_listener_);
+    input_manager_->addListener(InputEventType::Exit, [this](const InputEvent& e) {
+        running_ = false;
+    });
+
+    registerSendInputCommands();
     
+    duplication_system_.emplace(world_, *packet_distributor_);
+
     renderer_.emplace(window_width_, window_height_);
     renderer_->setCamera(&*camera_);
 
-    game_args_handler_.emplace(AssetDatabase::instance(), ResourceManager::instance(), *renderer_, *game_, *packet_distributor_);
+    ResourceManager::instance().init(&*renderer_);
+
+    game_args_handler_.emplace(AssetDatabase::instance(), ResourceManager::instance(), *renderer_, *packet_distributor_, world_);
 
     network_event_distributor_.emplace(*networker_);
 
@@ -45,11 +51,11 @@ GameClient::GameClient() {
 void GameClient::render() {
     renderer_->beginRender();
 
-    for (const ObjectState* obj_state : game_->getStates()) {
-        glm::mat4 transform = obj_state->transform.toMat4();
-        renderer_->drawMesh(obj_state->name, transform);
-    }
-
+    world_.queryColumns<Transform, MeshId>([this](std::span<Transform> t, std::span<MeshId> id){
+        for (size_t i = 0; i < t.size(); ++i) {
+            renderer_->drawMesh(id[i], t[i].toMat4());
+        }
+    });
     renderer_->endRender();
 }
 
@@ -65,3 +71,18 @@ void GameClient::run() {
 
     }
 } 
+
+void GameClient::registerSendInputCommands() {
+    input_manager_->addListener(InputEventType::MouseButtonUp,
+        [this](const InputEvent& e) {
+            ClientCommand c;
+            c.btn = ClientButton::RIGHT_CLICK;
+            c.mouse_pos = camera_->screenToWorldOnMap(e.mousePos, window_width_, window_height_);
+            DEBUG_LOG("world mouse x: " << c.mouse_pos.x << ", y: "<< c.mouse_pos.y);
+            c.release = true;
+            ClientCommandPacket p;
+            p.getData() = c;
+            network_adapter_->sendPacket(&p, Channel::RELIABLECOMMANDS, {});
+        }
+    );
+}

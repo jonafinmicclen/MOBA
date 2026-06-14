@@ -2,6 +2,8 @@
 
 
 #include <memory>
+#include <chrono>
+#include <thread>
 
 #include "Networking/Core/Networker.hpp"
 #include "Networking/Packets/PacketTypes.hpp"
@@ -10,23 +12,34 @@
 #include "Networking/PacketManager.hpp"
 #include "Adapter/NetAdapter.hpp"
 #include "Server/ClientAuthManager.hpp"
+#include "Common/Memory/FIFOQueue.hpp"
+#include "Common/Memory/BiMap.hpp"
+#include "Server/CommandHandler.hpp"
+#include "Game/ECS/Systems/ClientInputSystem.hpp"
+
+#include "Game/Packets/SpawnPacket.hpp"
 
 #include "Server/AccountCharacterBiMap.hpp"
-
+#include "Game/Packets/EntityOwnershipPacket.hpp"
 #include "GameClient/Packets/ClientAuthenticationPacket.hpp"
 #include "GameClient/Packets/GameArgsPacket.hpp"
-
+#include "Game/ECS/Systems/StateSnapshotSystem.hpp"
 #include "Common/Player/AccountID.hpp"
 
 #include "Networking/Session/PeerDirectory.hpp"
 
 #include "Assets/ResourceManager.hpp"
-#include "Game/Game.hpp"
 
 #include <optional>
 #include <unordered_map>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include "Game/Control/PlayerCommand.hpp"
+
+#include "Game/Placeholder/PlaceholderMapDef.hpp"
+
+#include "Game/Worlds/ServerWorld.hpp"
+
 using json = nlohmann::json;
 
 using user_id = std::string;
@@ -36,24 +49,34 @@ class Server {
 public:
     void simulate();
     void exit() {running = false;}
+    void pushClientInputSystem(ClientCommand c) {client_command_system_.getQueue().push(c);}
 
 private:
     void initialise();
     void loadConfig();
+    void initialiseWorld();
 
-    std::unique_ptr<Game> game_;
+    // Game state
+    ServerWorld world_;
+    MapDef map_;
+    GameArgs game_args_ = GameArgs("RuntimeData/game_args.json");
+    BiMap<AccountHash, EntityHandle> account_entity_map_;
 
+    // Networking
     std::optional<Networker> net_server_;
     std::optional<NetAdapter> net_adapter_;
-
-    std::optional<PacketDistributor> packet_distributor_;
     std::optional<PacketManager> packet_manager_;
+    std::optional<PacketDistributor> packet_distributor_;
 
+    // Services
     std::optional<ClientAuthManager> client_auth_manager_;
-
     
-    std::optional<GameArgs> game_args_;
-    
+    // Runtime systems
+    // Takes client inputs from queue filled by handler and applies them in game
+    ClientInputSystem client_command_system_;
+    std::optional<CommandHandler> client_command_handler_;
+    // Broadcasts state updates from the game world
+    StateSnapshotSystem state_snapshot_system_;
 
     bool running = false;
 };
