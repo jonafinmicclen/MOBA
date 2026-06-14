@@ -45,7 +45,7 @@ class ResourceManager {
     AssetId getAssetId(std::string asset_name);
 
     std::unordered_map<std::string, AssetId> asset_indicies;
-    std::vector<std::unique_ptr<Asset>> assets;
+    std::vector<Asset> assets;
     AssetDatabase& database = AssetDatabase::instance();
 
     Renderer* renderer_ = nullptr;

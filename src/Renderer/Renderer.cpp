@@ -5,13 +5,9 @@ Renderer::~Renderer() {
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
-[[nodiscard]] MeshId Renderer::uploadAssetMesh(Asset* asset) {
-    if (!asset || !asset->mesh) {
-        std::cout << "[Renderer] Failed to load mesh" << std::endl;
-        return std::numeric_limits<MeshId>::max();
-    }
+[[nodiscard]] MeshId Renderer::uploadAssetMesh(Asset& asset) {
+    MeshData& mesh = asset.mesh;
 
-    MeshData* mesh = asset->mesh.get();
     auto glMesh = std::make_unique<GLMesh>();
 
     glGenVertexArrays(1, &glMesh->vao);
@@ -20,82 +16,256 @@ Renderer::~Renderer() {
     glGenBuffers(1, &glMesh->vbo);
     glGenBuffers(1, &glMesh->ebo);
 
-    // Vertex struct for GPU
     struct VertexGPU {
         glm::vec3 position;
         glm::vec3 normal;
         glm::vec2 uv;
     };
 
-    // Copy all vertices to GPU structure
-    std::vector<VertexGPU> gpuVertices(mesh->vertices.size());
-    for (size_t i = 0; i < mesh->vertices.size(); ++i) {
-        gpuVertices[i].position = mesh->vertices[i].position;
-        gpuVertices[i].normal   = mesh->vertices[i].normal;
-        gpuVertices[i].uv       = mesh->vertices[i].uv;
+    std::vector<VertexGPU> gpuVertices;
+    gpuVertices.reserve(mesh.vertices.size());
+
+    for (const Vertex& vertex : mesh.vertices) {
+        gpuVertices.push_back({
+            vertex.position,
+            vertex.normal,
+            vertex.uv
+        });
     }
 
-    // Prepare index batches per texture
+    /*
+     * Verify that every triangle has a texture-index entry.
+     */
+    const std::size_t faceCount = mesh.indices.size() / 3;
+
+    if (mesh.indices.size() % 3 != 0) {
+        throw std::runtime_error(
+            "Mesh index count is not divisible by three"
+        );
+    }
+
+    if (mesh.faceTextureIndices.size() != faceCount) {
+        throw std::runtime_error(
+            "faceTextureIndices count does not match triangle count"
+        );
+    }
+
+    /*
+     * Group triangle indices by texture index.
+     *
+     * -1 represents triangles with no texture.
+     */
     glMesh->textureToFaceIndices.clear();
-    for (size_t face = 0; face < mesh->faceTextureIndices.size(); ++face) {
-        int texID = mesh->faceTextureIndices[face];
-        uint32_t i0 = mesh->indices[face * 3 + 0];
-        uint32_t i1 = mesh->indices[face * 3 + 1];
-        uint32_t i2 = mesh->indices[face * 3 + 2];
 
-        glMesh->textureToFaceIndices[texID].push_back(i0);
-        glMesh->textureToFaceIndices[texID].push_back(i1);
-        glMesh->textureToFaceIndices[texID].push_back(i2);
+    for (std::size_t face = 0; face < faceCount; ++face) {
+        const int textureIndex =
+            mesh.faceTextureIndices[face];
+
+        if (
+            textureIndex < -1 ||
+            textureIndex >=
+                static_cast<int>(asset.textures.size())
+        ) {
+            throw std::runtime_error(
+                "Mesh contains an invalid texture index"
+            );
+        }
+
+        auto& batch =
+            glMesh->textureToFaceIndices[textureIndex];
+
+        const std::size_t firstIndex = face * 3;
+
+        batch.push_back(mesh.indices[firstIndex + 0]);
+        batch.push_back(mesh.indices[firstIndex + 1]);
+        batch.push_back(mesh.indices[firstIndex + 2]);
     }
 
-    // Flatten indices for OpenGL
-    std::vector<uint32_t> allIndices;
-    for (auto& kv : glMesh->textureToFaceIndices) {
-        allIndices.insert(allIndices.end(), kv.second.begin(), kv.second.end());
+    /*
+     * Flatten the texture batches into one EBO.
+     *
+     * Also record where each texture's index range begins.
+     */
+    glMesh->drawBatches.clear();
+
+    std::vector<std::uint32_t> allIndices;
+    allIndices.reserve(mesh.indices.size());
+
+    for (const auto& [textureIndex, batchIndices] :
+         glMesh->textureToFaceIndices) {
+
+        GLMesh::DrawBatch drawBatch{};
+
+        drawBatch.textureIndex = textureIndex;
+        drawBatch.indexOffset = allIndices.size();
+        drawBatch.indexCount = batchIndices.size();
+
+        allIndices.insert(
+            allIndices.end(),
+            batchIndices.begin(),
+            batchIndices.end()
+        );
+
+        glMesh->drawBatches.push_back(drawBatch);
     }
+
     glMesh->indexCount = allIndices.size();
 
-    // Upload vertex buffer
+    // Upload vertices.
     glBindBuffer(GL_ARRAY_BUFFER, glMesh->vbo);
-    glBufferData(GL_ARRAY_BUFFER, gpuVertices.size() * sizeof(VertexGPU),
-                 gpuVertices.data(), GL_STATIC_DRAW);
 
-    // Upload index buffer
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        static_cast<GLsizeiptr>(
+            gpuVertices.size() * sizeof(VertexGPU)
+        ),
+        gpuVertices.data(),
+        GL_STATIC_DRAW
+    );
+
+    // Upload indices.
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glMesh->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, allIndices.size() * sizeof(uint32_t),
-                 allIndices.data(), GL_STATIC_DRAW);
 
-    // Vertex attributes
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        static_cast<GLsizeiptr>(
+            allIndices.size() * sizeof(std::uint32_t)
+        ),
+        allIndices.data(),
+        GL_STATIC_DRAW
+    );
+
+    // Vertex positions.
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexGPU),
-                          (void*)offsetof(VertexGPU, position));
 
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(VertexGPU),
+        reinterpret_cast<void*>(
+            offsetof(VertexGPU, position)
+        )
+    );
+
+    // Vertex normals.
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexGPU),
-                          (void*)offsetof(VertexGPU, normal));
 
+    glVertexAttribPointer(
+        1,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(VertexGPU),
+        reinterpret_cast<void*>(
+            offsetof(VertexGPU, normal)
+        )
+    );
+
+    // Vertex UVs.
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexGPU),
-                          (void*)offsetof(VertexGPU, uv));
 
-    // Upload textures
-    glMesh->textures.resize(mesh->textures.size());
-    for (size_t i = 0; i < mesh->textures.size(); ++i) {
-        auto& tex = mesh->textures[i];
-        GLuint texID;
-        glGenTextures(1, &texID);
-        glBindTexture(GL_TEXTURE_2D, texID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, tex->data.data());
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glMesh->textures[i] = texID;
+    glVertexAttribPointer(
+        2,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(VertexGPU),
+        reinterpret_cast<void*>(
+            offsetof(VertexGPU, uv)
+        )
+    );
+
+    /*
+     * Upload each unique asset texture exactly once.
+     */
+    glMesh->textures.resize(asset.textures.size(), 0);
+
+    if (!asset.textures.empty()) {
+        glGenTextures(
+            static_cast<GLsizei>(glMesh->textures.size()),
+            glMesh->textures.data()
+        );
     }
 
+    for (std::size_t textureIndex = 0;
+         textureIndex < asset.textures.size();
+         ++textureIndex) {
+
+        const Texture& texture =
+            asset.textures[textureIndex];
+
+        if (
+            texture.width <= 0 ||
+            texture.height <= 0 ||
+            texture.data.empty()
+        ) {
+            throw std::runtime_error(
+                "Cannot upload an empty texture"
+            );
+        }
+
+        const GLuint openGLTexture =
+            glMesh->textures[textureIndex];
+
+        glBindTexture(
+            GL_TEXTURE_2D,
+            openGLTexture
+        );
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA8,
+            texture.width,
+            texture.height,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            texture.data.data()
+        );
+
+        glTexParameteri(
+            GL_TEXTURE_2D,
+            GL_TEXTURE_MIN_FILTER,
+            GL_LINEAR_MIPMAP_LINEAR
+        );
+
+        glTexParameteri(
+            GL_TEXTURE_2D,
+            GL_TEXTURE_MAG_FILTER,
+            GL_LINEAR
+        );
+
+        glTexParameteri(
+            GL_TEXTURE_2D,
+            GL_TEXTURE_WRAP_S,
+            GL_REPEAT
+        );
+
+        glTexParameteri(
+            GL_TEXTURE_2D,
+            GL_TEXTURE_WRAP_T,
+            GL_REPEAT
+        );
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
     meshes.push_back(std::move(glMesh));
-    MeshId mid {static_cast<uint32_t>(meshes.size() - 1)};
-    return mid;
+
+    return MeshId{
+        static_cast<std::uint32_t>(
+            meshes.size() - 1
+        )
+    };
 }
 
 
@@ -186,37 +356,83 @@ void Renderer::beginRender() {
 }
 
 
-void Renderer::drawMesh(const MeshId mesh_id, const glm::mat4& model) {
-    GLMesh* mesh = meshes[mesh_id.id].get();
-    if (!mesh) return;
-
-    glBindVertexArray(mesh->vao);
-    glUseProgram(shaderProgram);
-
-    glUniformMatrix4fv(uModel, 1, GL_FALSE, &model[0][0]);
-
-    // Draw per-texture
-    GLuint indexOffset = 0;
-    for (auto& kv : mesh->textureToFaceIndices) {
-        int texID = kv.first;
-        size_t count = kv.second.size();
-
-        // Bind texture
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mesh->textures[texID]);
-        
-        glUniform1i(uTex, 0);
-
-
-        // Draw only this batch
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(count),
-                       GL_UNSIGNED_INT, (void*)(indexOffset * sizeof(uint32_t)));
-
-        indexOffset += count;
+void Renderer::drawMesh(
+    const MeshId mesh_id,
+    const glm::mat4& model
+) {
+    if (mesh_id.id >= meshes.size()) {
+        return;
     }
 
-    glBindVertexArray(0);
+    GLMesh* mesh = meshes[mesh_id.id].get();
+
+    if (mesh == nullptr) {
+        return;
+    }
+
+    glUseProgram(shaderProgram);
+    glBindVertexArray(mesh->vao);
+
+    glUniformMatrix4fv(
+        uModel,
+        1,
+        GL_FALSE,
+        &model[0][0]
+    );
+
     glActiveTexture(GL_TEXTURE0);
+    glUniform1i(uTex, 0);
+
+    std::size_t indexOffset = 0;
+
+    for (const auto& [textureIndex, indices] :
+         mesh->textureToFaceIndices) {
+
+        const std::size_t indexCount = indices.size();
+
+        if (indexCount == 0) {
+            continue;
+        }
+
+        if (
+            textureIndex >= 0 &&
+            static_cast<std::size_t>(textureIndex) <
+                mesh->textures.size()
+        ) {
+            glBindTexture(
+                GL_TEXTURE_2D,
+                mesh->textures[
+                    static_cast<std::size_t>(
+                        textureIndex
+                    )
+                ]
+            );
+        } else {
+            /*
+             * This batch had no valid texture.
+             * Bind 0, or bind a fallback white texture here.
+             */
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
+        const std::size_t byteOffset =
+            indexOffset * sizeof(std::uint32_t);
+
+        glDrawElements(
+            GL_TRIANGLES,
+            static_cast<GLsizei>(indexCount),
+            GL_UNSIGNED_INT,
+            reinterpret_cast<const void*>(
+                byteOffset
+            )
+        );
+
+        indexOffset += indexCount;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 

@@ -26,21 +26,32 @@ public:
     void beginRender();
     void endRender();
     void testMesh(glm::vec3 translation);
-    MeshId uploadAssetMesh(Asset* asset);
+    MeshId uploadAssetMesh(Asset& asset);
     void drawMesh(const MeshId mesh_id, const glm::mat4& model);
 
     void setCamera(Camera* cam) {camera = cam; view=cam->getView(); proj=camera->getProjection((float)width/(float)height); }
 
 private:
     struct GLMesh {
+        struct DrawBatch {
+            int textureIndex = -1;
+            std::size_t indexOffset = 0;
+            std::size_t indexCount = 0;
+        };
+
         GLuint vao = 0;
         GLuint vbo = 0;
         GLuint ebo = 0;
-        size_t indexCount = 0;
 
-        std::vector<GLuint> textures;        // All textures for this mesh
-        std::unordered_map<int, std::vector<uint32_t>> textureToFaceIndices;
+        std::size_t indexCount = 0;
 
+        std::vector<GLuint> textures;
+        std::vector<DrawBatch> drawBatches;
+
+        std::unordered_map<
+            int,
+            std::vector<std::uint32_t>
+        > textureToFaceIndices;
     };
 
     Camera* camera;
