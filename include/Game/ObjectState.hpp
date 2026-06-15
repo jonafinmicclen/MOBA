@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "Game/Transform.hpp"
+#include "EntityComponentSystem/Components/Transform.hpp"
 
 struct ObjectState {
     std::string name;

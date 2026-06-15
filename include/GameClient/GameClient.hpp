@@ -34,7 +34,7 @@
 
 #include "GameClient/Packets/ClientAuthenticationPacket.hpp"
 #include "GameClient/Packets/GameArgsPacket.hpp"
-#include "Game/Worlds/ClientWorld.hpp"
+#include "EntityComponentSystem/Worlds/ClientWorld.hpp"
 #include "GameClient/Net/GameArgsHandler.hpp"
 
 #include "GameClient/Duplication/DuplicationSystem.hpp"

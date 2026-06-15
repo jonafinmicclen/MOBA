@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Game/ECS/Entity.hpp"
-#include "Game/ECS/ECSConfig.hpp"
+#include "EntityComponentSystem/Core/Entity.hpp"
+#include "EntityComponentSystem/Core/ECSConfig.hpp"
 
 #include <span>
 #include <cstdint>

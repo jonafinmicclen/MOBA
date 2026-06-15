@@ -2,8 +2,8 @@
 
 #include "Networking/Packets/AutoRegisterPacket.hpp"
 #include "Debug/debug.hpp"
-#include "Game/Transform.hpp"
-#include "Game/ECS/World.hpp"
+#include "EntityComponentSystem/Components/Transform.hpp"
+#include "EntityComponentSystem/Core/World.hpp"
 
 #include <bit>
 #include <cstdint>

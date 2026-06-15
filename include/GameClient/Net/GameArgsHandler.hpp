@@ -2,7 +2,7 @@
 
 #include "Networking/Packets/PacketDistributor.hpp"
 #include "GameClient/Packets/GameArgsPacket.hpp"
-#include "Game/Worlds/ClientWorld.hpp"
+#include "EntityComponentSystem/Worlds/ClientWorld.hpp"
 
 #include "Renderer/Renderer.hpp"
 

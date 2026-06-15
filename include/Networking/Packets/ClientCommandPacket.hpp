@@ -12,32 +12,32 @@
 #include <vector>
 
 
-class ClientCommandPacket
-    : public AutoRegisterPacket<ClientCommandPacket, PacketType::ClientCommandPacket> {
+class ClientInputPacket
+    : public AutoRegisterPacket<ClientInputPacket, PacketType::ClientInputPacket> {
 public:
     static_assert(std::is_same_v<decltype(WorldSpacePos{}.x), float>,
-                  "WorldSpacePos::x must be float for ClientCommandPacket serialization");
+                  "WorldSpacePos::x must be float for ClientInputPacket serialization");
 
     static_assert(std::is_same_v<decltype(WorldSpacePos{}.y), float>,
-                  "WorldSpacePos::y must be float for ClientCommandPacket serialization");
+                  "WorldSpacePos::y must be float for ClientInputPacket serialization");
 
     static_assert(sizeof(float) == 4,
-                  "ClientCommandPacket expects 32-bit floats");
+                  "ClientInputPacket expects 32-bit floats");
 
     static_assert(std::numeric_limits<float>::is_iec559,
-                  "ClientCommandPacket expects IEEE 754 floats");
+                  "ClientInputPacket expects IEEE 754 floats");
 
     PacketType getType() const override {
-        return PacketType::ClientCommandPacket;
+        return PacketType::ClientInputPacket;
     }
 
     void deserialize(const uint8_t* data, size_t size) {
         if (size < PacketSize) {
-            DEBUG_LOG("ClientCommandPacket deserialize failed: packet too small");
+            DEBUG_LOG("ClientInputPacket deserialize failed: packet too small");
             return;
         }
 
-        data_.btn = static_cast<ClientButton>(data[0]);
+        data_.btn = static_cast<ClientInputButton>(data[0]);
 
         uint32_t x_bits =
             (static_cast<uint32_t>(data[1]) << 24) |
@@ -81,16 +81,16 @@ public:
         return d;
     }
 
-    ClientCommand& getData() {
+    ClientInput& getData() {
         return data_;
     }
 
-    const ClientCommand& getData() const {
+    const ClientInput& getData() const {
         return data_;
     }
 
 private:
     static constexpr size_t PacketSize = 10;
 
-    ClientCommand data_;
+    ClientInput data_;
 };

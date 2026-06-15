@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Game/Worlds/ServerWorld.hpp"
+#include "EntityComponentSystem/Worlds/ServerWorld.hpp"
 #include "Game/Packets/EntityStatePacket.hpp"
 #include "Adapter/NetAdapter.hpp"
 

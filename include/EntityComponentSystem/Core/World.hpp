@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Game/ECS/Archetype.hpp"
-#include "Game/ECS/Entity.hpp"
+#include "EntityComponentSystem/Core/Archetype.hpp"
+#include "EntityComponentSystem/Core/Entity.hpp"
 
 #include <deque>
 #include <cstdint>

@@ -5,7 +5,7 @@
 #include <optional>
 #include "Authentication/Auth.hpp"
 
-enum class ClientButton : uint8_t {
+enum class ClientInputButton : uint8_t {
     LEFT_CLICK,
     RIGHT_CLICK,
     Q,
@@ -22,8 +22,8 @@ enum class ClientButton : uint8_t {
     ITEMSLOT6
 };
 
-struct ClientCommand {
-    ClientButton btn;
+struct ClientInput {
+    ClientInputButton btn;
     WorldSpacePos mouse_pos;
     bool release;
     std::optional<AccountHash> account_hash = std::nullopt;

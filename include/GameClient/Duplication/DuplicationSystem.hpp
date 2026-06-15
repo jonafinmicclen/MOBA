@@ -5,7 +5,7 @@
 
 #include "Assets/ResourceManager.hpp"
 
-#include "Game/Worlds/ClientWorld.hpp"
+#include "EntityComponentSystem/Worlds/ClientWorld.hpp"
 
 #include "Networking/Packets/PacketDistributor.hpp"
 #include "Game/Packets/EntityOwnershipPacket.hpp"

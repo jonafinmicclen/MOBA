@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Game/Match/MapDef.hpp"
+#include "Game/MapDef.hpp"
 
 namespace PlaceholderMapDef {
     inline MapDef getMap() {

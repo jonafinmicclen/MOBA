@@ -13,9 +13,9 @@ using json = nlohmann::json;
 #include "Common/Player/AccountID.hpp"
 #include "Game/Entities/Characters/CharacterID.hpp"
 
-#include "Server/AccountCharacterBiMap.hpp"
+#include "Server/ClientServices/AccountCharacterBiMap.hpp"
 
-#include "Game/Match/Team.hpp"
+#include "EntityComponentSystem/Components/Match/Team.hpp"
 
 using PlayerIdx = uint8_t;
 

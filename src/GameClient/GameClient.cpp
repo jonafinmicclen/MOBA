@@ -75,12 +75,12 @@ void GameClient::run() {
 void GameClient::registerSendInputCommands() {
     input_manager_->addListener(InputEventType::MouseButtonUp,
         [this](const InputEvent& e) {
-            ClientCommand c;
-            c.btn = ClientButton::RIGHT_CLICK;
+            ClientInput c;
+            c.btn = ClientInputButton::RIGHT_CLICK;
             c.mouse_pos = camera_->screenToWorldOnMap(e.mousePos, window_width_, window_height_);
             DEBUG_LOG("world mouse x: " << c.mouse_pos.x << ", y: "<< c.mouse_pos.y);
             c.release = true;
-            ClientCommandPacket p;
+            ClientInputPacket p;
             p.getData() = c;
             network_adapter_->sendPacket(&p, Channel::RELIABLECOMMANDS, {});
         }

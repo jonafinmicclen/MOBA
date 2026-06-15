@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "Game/Match/SpawnPoint.hpp"
+#include "EntityComponentSystem/Components/Match/Spawnpoint.hpp"
 
 #include "Common/Math/Rect.hpp"
 

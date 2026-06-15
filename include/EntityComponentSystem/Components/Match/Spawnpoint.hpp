@@ -2,9 +2,9 @@
 
 #include "Common/Coordinates/WorldSpacePos.hpp"
 
-#include "Game/Match/Team.hpp"
+#include "EntityComponentSystem/Components/Match/Team.hpp"
 
 struct SpawnPoint {
     WorldSpacePos point{};
-    Team team{};
+    Team team{0};
 };

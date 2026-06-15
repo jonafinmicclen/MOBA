@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Game/ECS/World.hpp"
-#include "Game/ECS/Archetype.hpp"
+#include "EntityComponentSystem/Core/World.hpp"
+#include "EntityComponentSystem/Core/Archetype.hpp"
 
-#include "Game/Transform.hpp"
-#include "Game/Navigation/Path.hpp"
-#include "Game/Match/Team.hpp"
-#include "Game/Match/SpawnPoint.hpp"
+#include "EntityComponentSystem/Components/Transform.hpp"
+#include "EntityComponentSystem/Components/Navigation/Path.hpp"
+#include "EntityComponentSystem/Components/Match/Team.hpp"
+#include "EntityComponentSystem/Components/Match/Spawnpoint.hpp"
 
 #include "Assets/ModelData.hpp"
 

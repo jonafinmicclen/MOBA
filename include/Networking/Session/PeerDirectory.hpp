@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <optional>
 
-class PeerDirectory {
+class PeerAccountMap {
 public:
     void addAccount(const AccountID& acc_id, const PeerID& peer_id) {
         /** 

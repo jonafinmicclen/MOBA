@@ -2,7 +2,7 @@
 
 #include "Networking/Packets/AutoRegisterPacket.hpp"
 #include "Debug/debug.hpp"
-#include "Game/ECS/World.hpp"
+#include "EntityComponentSystem/Core/World.hpp"
 
 #include <cstdint>
 #include <stdexcept>

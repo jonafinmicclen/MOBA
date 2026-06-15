@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Server/AccountCharacterBiMap.hpp"
+#include "Server/ClientServices/AccountCharacterBiMap.hpp"
 #include "Networking/Packets/PacketDistributor.hpp"
 #include "Networking/Core/Networker.hpp"
 #include "Common/Player/AccountID.hpp"
@@ -10,44 +10,47 @@
 #include "Server/GameArgs.hpp"
 #include "Adapter/NetAdapter.hpp"
 
-#include "Game/Worlds/ServerWorld.hpp"
+#include "EntityComponentSystem/Worlds/ServerWorld.hpp"
 #include "Adapter/NetAdapter.hpp"
 #include "Common/Memory/BiMap.hpp"
 #include "Game/Placeholder/PlaceholderMapDef.hpp"
 #include "Game/Packets/SpawnPacket.hpp"
 #include "Game/Packets/EntityOwnershipPacket.hpp"
+#include "Server/ClientServices/ClientState.hpp"
 
 #include <cstdint>
 #include "Debug/debug.hpp"
 
    // net_adapter, account_entity_map_, game_map-, world_
 
-class ClientAuthManager {
+class ClientAuthSystem {
     /**
      * Listens for clients authentication packet
      * Once authenticated maps peer -> account
      * Tells client what data to load
      */
 public:
-    ClientAuthManager(
+    ClientAuthSystem(
         PacketDistributor& distributor, 
         NetAdapter& networker, 
         GameArgs& game_args,
         BiMap<AccountHash, EntityHandle>& acc_entity_map,
         MapDef& game_map,
-        ServerWorld& world
+        ServerWorld& world,
+        PeerAccountMap& map
     ) 
         : 
         networker_(networker), 
         game_args_(game_args),
         account_entity_map_(acc_entity_map),
         game_map_(game_map),
-        world_(world)
+        world_(world),
+        map_(map)
         {
         DEBUG_LOG("Game will start when " << (game_args_.players.size()) << " players are connected.");
         initListener(distributor);
     }
-    PeerDirectory& getMap() {return map_;}
+    PeerAccountMap& getMap() {return map_;}
 private:
 
     void initListener(PacketDistributor& distributor) {
@@ -139,16 +142,12 @@ private:
             networker_.sendPacket(&ownership_pkt, Channel::RELIABLECOMMANDS, {*target_peer});
         }
     }
-       // net_adapter, account_entity_map_, game_map-, world_
 
-    
-    
-    
-    PeerDirectory map_;
     NetAdapter& networker_;
     GameArgs& game_args_;
     BiMap<AccountHash, EntityHandle>& account_entity_map_;
     MapDef& game_map_;
     ServerWorld& world_;
+    PeerAccountMap& map_;
     uint8_t connected_players_ {0};
 };
