@@ -13,6 +13,11 @@ class AssetDatabase {
     }
 
     const AssetDefinition& Get(const std::string& id) const {
+
+        #ifdef DEBUG
+        assert(Exists(id) && "Asset definition did not exist, program will now crash XD");
+        #endif
+
         return defs.at(id);
     }
 

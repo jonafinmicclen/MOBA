@@ -1,10 +1,17 @@
 #pragma once
 
 #include <array>
-#include <glm/glm.hpp>
+#include "Common/Coordinates/WorldSpacePos.hpp"
 
-constexpr size_t MAX_WAYPOINTS = 5;
+constexpr size_t MAX_WAYPOINTS = 35;
+
+using Waypoint = WorldSpacePos;
+using Waypoints = std::array<Waypoint, MAX_WAYPOINTS>;
 
 struct Path {
-    std::array<glm::vec2, MAX_WAYPOINTS> waypoints;
+    Waypoints waypoints;
+    size_t target_waypoint;
+    size_t num_waypoints;
+    bool active = false;
 };
+ 

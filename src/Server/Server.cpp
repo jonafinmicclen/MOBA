@@ -58,6 +58,7 @@ void Server::simulate() {
         packet_manager_->pump();
 
         client_input_system_->update(world_, client_state_.account_entity_map);
+        path_following_system_.update(world_);
 
         const auto now = clock::now();
 

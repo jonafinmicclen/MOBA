@@ -15,6 +15,7 @@
 #include "Common/Memory/FIFOQueue.hpp"
 #include "Common/Memory/BiMap.hpp"
 #include "Server/Systems/Input/ClientInputSystem.hpp"
+#include "Server/Systems/Movement/PathFollowingSystem.hpp"
 
 #include "Game/Packets/Gameplay/SpawnPacket.hpp"
 
@@ -74,6 +75,7 @@ private:
     std::optional<ClientAuthSystem> client_auth_system_;
     std::optional<ClientInputSystem> client_input_system_;
     StateSnapshotSystem state_snapshot_system_;
+    PathFollowingSystem path_following_system_;
 
     bool running = false;
 };

@@ -16,6 +16,7 @@
 #include "Game/Packets/Gameplay/SpawnPacket.hpp"
 #include "Game/Packets/Initialiser/EntityOwnershipPacket.hpp"
 #include "Server/ClientState.hpp"
+#include "Game/Components/Stats/MovementSpeed.hpp"
 
 
 #include <cstdint>
@@ -116,8 +117,10 @@ private:
             spawn_transform.position.x = player_spawn.point.x;
             spawn_transform.position.y = player_spawn.point.y;
             Path p;
+            MovementSpeed ms;
+            ms.speed = 0.03f;
             EntityHandle handle = world_.add<ServerArchetypeId::Champion>(
-                spawn_transform, p, player.team, player_spawn
+                spawn_transform, p, player.team, player_spawn, ms
             );
             // Emit spawn packet for clients
             SpawnCommand c;

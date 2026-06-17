@@ -7,6 +7,7 @@
 #include "Game/Components/Navigation/Path.hpp"
 #include "Game/Components/Match/Team.hpp"
 #include "Game/Components/Match/Spawnpoint.hpp"
+#include "Game/Components/Stats/MovementSpeed.hpp"
 
 #include <cstdint>
 #include <tuple>
@@ -25,7 +26,7 @@ struct ServerWorldTraits {
     using Archetypes = std::tuple<
         ArchetypeSpec<
             ArchetypeId::Champion,
-            Archetype<Transform, Path, Team, SpawnPoint>
+            Archetype<Transform, Path, Team, SpawnPoint, MovementSpeed>
         >,
 
         ArchetypeSpec<
