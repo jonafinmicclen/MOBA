@@ -1,11 +1,12 @@
 #pragma once
 
-#include <glad/glad.h>
+#include <external/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <optional>
 
 struct MeshId{
     uint32_t id;
@@ -49,21 +50,12 @@ struct MeshData {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     std::vector<int> faceTextureIndices;
-    std::vector<std::shared_ptr<Texture>> textures;
-};
-
-struct Material {
-    std::shared_ptr<Texture> albedo;
-    std::shared_ptr<Texture> lightmap;
-    std::shared_ptr<Texture> normal;
-    std::shared_ptr<Texture> occlusion;
-    std::shared_ptr<Texture> emissive;
 };
 
 
 struct Asset {
-    std::unique_ptr<MeshData> mesh;
-    std::vector<std::shared_ptr<Material>> materials;
+    MeshData mesh;
+    std::vector<Texture> textures;
     std::vector<AnimationData> animations;
     MeshId mesh_id;
     std::string name;

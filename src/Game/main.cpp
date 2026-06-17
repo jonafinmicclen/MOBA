@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "GameClient/GameClient.hpp"
+#include "Client/GameClient/GameClient.hpp"
 
 int main(int argc, char **argv) {
 

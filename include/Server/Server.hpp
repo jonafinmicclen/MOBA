@@ -5,28 +5,28 @@
 #include <chrono>
 #include <thread>
 
-#include "Networking/Core/Networker.hpp"
-#include "Networking/Packets/PacketTypes.hpp"
-#include "Networking/Packets/PacketDistributor.hpp"
-#include "Networking/NetConfig.hpp"
-#include "Networking/PacketManager.hpp"
-#include "Adapter/NetAdapter.hpp"
-#include "Server/ClientAuthManager.hpp"
+#include "Core/Networking/Core/Networker.hpp"
+#include "Core/Networking/Packets/PacketTypes.hpp"
+#include "Core/Networking/Packets/PacketDistributor.hpp"
+#include "Core/Networking/NetConfig.hpp"
+#include "Core/Networking/PacketManager.hpp"
+#include "Core/Adapter/NetAdapter.hpp"
+#include "Server/Initialiser/ClientAuthManager.hpp"
 #include "Common/Memory/FIFOQueue.hpp"
 #include "Common/Memory/BiMap.hpp"
-#include "Server/CommandHandler.hpp"
-#include "Game/ECS/Systems/ClientInputSystem.hpp"
+#include "Server/Systems/Input/ClientInputSystem.hpp"
 
-#include "Game/Packets/SpawnPacket.hpp"
+#include "Game/Packets/Gameplay/SpawnPacket.hpp"
 
-#include "Server/AccountCharacterBiMap.hpp"
-#include "Game/Packets/EntityOwnershipPacket.hpp"
-#include "GameClient/Packets/ClientAuthenticationPacket.hpp"
-#include "GameClient/Packets/GameArgsPacket.hpp"
-#include "Game/ECS/Systems/StateSnapshotSystem.hpp"
+#include "Game/Packets/Initialiser/EntityOwnershipPacket.hpp"
+#include "Game/Packets/Initialiser/ClientAuthenticationPacket.hpp"
+#include "Game/Packets/Initialiser/GameArgsPacket.hpp"
+#include "Server/Systems/Distribution/StateSnapshotSystem.hpp"
 #include "Common/Player/AccountID.hpp"
 
-#include "Networking/Session/PeerDirectory.hpp"
+#include "Server/ClientState.hpp"
+
+#include "Core/Networking/Session/PeerDirectory.hpp"
 
 #include "Assets/ResourceManager.hpp"
 
@@ -38,29 +38,31 @@
 
 #include "Game/Placeholder/PlaceholderMapDef.hpp"
 
-#include "Game/Worlds/ServerWorld.hpp"
+#include "Server/ServerWorld.hpp"
 
 using json = nlohmann::json;
 
 using user_id = std::string;
 using client_id = uint8_t;
 
+
+
+
 class Server {
 public:
     void simulate();
     void exit() {running = false;}
-    void pushClientInputSystem(ClientCommand c) {client_command_system_.getQueue().push(c);}
 
 private:
     void initialise();
     void loadConfig();
-    void initialiseWorld();
+
+    ClientState client_state_;
 
     // Game state
     ServerWorld world_;
     MapDef map_;
     GameArgs game_args_ = GameArgs("RuntimeData/game_args.json");
-    BiMap<AccountHash, EntityHandle> account_entity_map_;
 
     // Networking
     std::optional<Networker> net_server_;
@@ -69,13 +71,8 @@ private:
     std::optional<PacketDistributor> packet_distributor_;
 
     // Services
-    std::optional<ClientAuthManager> client_auth_manager_;
-    
-    // Runtime systems
-    // Takes client inputs from queue filled by handler and applies them in game
-    ClientInputSystem client_command_system_;
-    std::optional<CommandHandler> client_command_handler_;
-    // Broadcasts state updates from the game world
+    std::optional<ClientAuthSystem> client_auth_system_;
+    std::optional<ClientInputSystem> client_input_system_;
     StateSnapshotSystem state_snapshot_system_;
 
     bool running = false;
