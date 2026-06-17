@@ -11,21 +11,20 @@
 #include "Networking/NetConfig.hpp"
 #include "Networking/PacketManager.hpp"
 #include "Adapter/NetAdapter.hpp"
-#include "Server/ClientServices/ClientAuthManager.hpp"
+#include "Server/Initialiser/ClientAuthManager.hpp"
 #include "Common/Memory/FIFOQueue.hpp"
 #include "Common/Memory/BiMap.hpp"
-#include "EntityComponentSystem/Systems/ClientInputSystem.hpp"
+#include "Server/Systems/Input/ClientInputSystem.hpp"
 
-#include "Game/Packets/SpawnPacket.hpp"
+#include "Game/Packets/Gameplay/SpawnPacket.hpp"
 
-#include "Server/ClientServices/AccountCharacterBiMap.hpp"
-#include "Game/Packets/EntityOwnershipPacket.hpp"
-#include "GameClient/Packets/ClientAuthenticationPacket.hpp"
-#include "GameClient/Packets/GameArgsPacket.hpp"
-#include "EntityComponentSystem/Systems/StateSnapshotSystem.hpp"
+#include "Game/Packets/Initialiser/EntityOwnershipPacket.hpp"
+#include "Game/Packets/Initialiser/ClientAuthenticationPacket.hpp"
+#include "Game/Packets/Initialiser/GameArgsPacket.hpp"
+#include "Server/Systems/Distribution/StateSnapshotSystem.hpp"
 #include "Common/Player/AccountID.hpp"
 
-#include "Server/ClientServices/ClientState.hpp"
+#include "Server/ClientState.hpp"
 
 #include "Networking/Session/PeerDirectory.hpp"
 
@@ -39,7 +38,7 @@
 
 #include "Game/Placeholder/PlaceholderMapDef.hpp"
 
-#include "EntityComponentSystem/Worlds/ServerWorld.hpp"
+#include "Server/ServerWorld.hpp"
 
 using json = nlohmann::json;
 

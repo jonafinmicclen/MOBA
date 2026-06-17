@@ -3,7 +3,7 @@
 #include "Networking/Packets/AutoRegisterPacket.hpp"
 
 #include <fstream>
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 
 #include <optional>
 #include <nlohmann/json.hpp>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 
-#include "Threading/ThreadSafeQueue.hpp"
+#include "Common/Threading/ThreadSafeQueue.hpp"
 #include "Common/Memory/HandleMap.hpp"
 
 #include "Networking/NetConfig.hpp"
@@ -11,7 +11,7 @@
 #include "Networking/Core/NetCommand.hpp"
 #include "Networking/Core/NetEvent.hpp"
 
-#include "Server/GameArgs.hpp"
+//#include "Server/Initialiser/GameArgs.hpp" this cant be needed here?
 
 #include <enet/enet.h>
 

@@ -5,12 +5,12 @@
 
 #include "Assets/ResourceManager.hpp"
 
-#include "EntityComponentSystem/Worlds/ClientWorld.hpp"
+#include "GameClient/ClientWorld.hpp"
 
 #include "Networking/Packets/PacketDistributor.hpp"
-#include "Game/Packets/EntityOwnershipPacket.hpp"
-#include "Game/Packets/EntityStatePacket.hpp"
-#include "Game/Packets/SpawnPacket.hpp"
+#include "Game/Packets/Initialiser/EntityOwnershipPacket.hpp"
+#include "Game/Packets/Gameplay/EntityStatePacket.hpp"
+#include "Game/Packets/Gameplay/SpawnPacket.hpp"
 
 #include "Common/Memory/BiMap.hpp"
 

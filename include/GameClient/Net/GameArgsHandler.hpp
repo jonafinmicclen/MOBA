@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Networking/Packets/PacketDistributor.hpp"
-#include "GameClient/Packets/GameArgsPacket.hpp"
-#include "EntityComponentSystem/Worlds/ClientWorld.hpp"
+#include "Game/Packets/Initialiser/GameArgsPacket.hpp"
+#include "GameClient/ClientWorld.hpp"
 
 #include "Renderer/Renderer.hpp"
 

@@ -4,7 +4,7 @@
 #include "Networking/Packets/PacketDistributor.hpp"
 #include "Networking/Packets/PacketFactory.hpp"
 
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 
 class PacketManager {
 public:

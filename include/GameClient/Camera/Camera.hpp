@@ -7,7 +7,7 @@
 #include "Common/Coordinates/ScreenSpacePos.hpp"
 
 #include "Common/Math/Rect.hpp"
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 
 class Camera {
 public:

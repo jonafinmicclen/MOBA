@@ -3,7 +3,7 @@
 #include "GameClient/Camera/Camera.hpp"
 #include "Common/Math/Rect.hpp"
 
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 
 class CameraController {
     public:

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/glad.h>
+#include <external/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vector>

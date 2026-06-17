@@ -2,7 +2,7 @@
 
 #include "GameArgsHandler.hpp"
 
-#include "GameClient/Packets/ClientAuthenticationPacket.hpp"
+#include "Game/Packets/Initialiser/ClientAuthenticationPacket.hpp"
 
 #include "Networking/Core/NetEventDistributor.hpp"
 

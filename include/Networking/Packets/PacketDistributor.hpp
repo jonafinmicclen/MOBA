@@ -6,7 +6,7 @@
 
 #include "Networking/Packets/PacketMetadata.hpp"
 
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 
 #include <functional>
 #include <memory>

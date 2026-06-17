@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 #include "GLBLoader.hpp"
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 #include "Game/CharacterMap/AssetDatabase.hpp"
 #include "Assets/ModelData.hpp"
 

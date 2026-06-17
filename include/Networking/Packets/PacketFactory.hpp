@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 
 #include "Networking/Packets/PacketBase.hpp"
 #include <unordered_map>

@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "Input/InputEventTypes.hpp"
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 
 class InputManager {
 public:

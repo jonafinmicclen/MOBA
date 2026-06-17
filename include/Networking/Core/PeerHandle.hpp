@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Debug/debug.hpp"
+#include "Common/Debug/debug.hpp"
 
 #include <cstdint>
 #include <optional>
