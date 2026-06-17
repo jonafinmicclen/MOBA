@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Networking/Packets/AutoRegisterPacket.hpp"
+#include "Core/Networking/Packets/AutoRegisterPacket.hpp"
 #include "Common/Coordinates/WorldSpacePos.hpp"
 #include "Game/Control/PlayerCommand.hpp"
 #include "Common/Debug/debug.hpp"

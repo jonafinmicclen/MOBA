@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "Networking/Packets/JSONPacket.hpp"
+#include "Core/Networking/Packets/JSONPacket.hpp"
 #include "Authentication/Auth.hpp"
 
 

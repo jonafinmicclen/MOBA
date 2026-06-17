@@ -5,12 +5,12 @@
 #include <chrono>
 #include <thread>
 
-#include "Networking/Core/Networker.hpp"
-#include "Networking/Packets/PacketTypes.hpp"
-#include "Networking/Packets/PacketDistributor.hpp"
-#include "Networking/NetConfig.hpp"
-#include "Networking/PacketManager.hpp"
-#include "Adapter/NetAdapter.hpp"
+#include "Core/Networking/Core/Networker.hpp"
+#include "Core/Networking/Packets/PacketTypes.hpp"
+#include "Core/Networking/Packets/PacketDistributor.hpp"
+#include "Core/Networking/NetConfig.hpp"
+#include "Core/Networking/PacketManager.hpp"
+#include "Core/Adapter/NetAdapter.hpp"
 #include "Server/Initialiser/ClientAuthManager.hpp"
 #include "Common/Memory/FIFOQueue.hpp"
 #include "Common/Memory/BiMap.hpp"
@@ -26,7 +26,7 @@
 
 #include "Server/ClientState.hpp"
 
-#include "Networking/Session/PeerDirectory.hpp"
+#include "Core/Networking/Session/PeerDirectory.hpp"
 
 #include "Assets/ResourceManager.hpp"
 

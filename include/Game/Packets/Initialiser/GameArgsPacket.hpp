@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Server/Initialiser/GameArgs.hpp"
-#include "Networking/Packets/JSONPacket.hpp"
+#include "Core/Networking/Packets/JSONPacket.hpp"
 
 
 class GameArgsPacket : public AutoRegisterPacket<GameArgsPacket, PacketType::GAME_ARGS_PACKET>, public JSONPacket {

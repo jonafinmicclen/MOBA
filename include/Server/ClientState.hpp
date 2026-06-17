@@ -3,7 +3,7 @@
 #include "Server/ServerWorld.hpp"
 #include "Authentication/Auth.hpp"
 #include "Common/Memory/BiMap.hpp"
-#include "Networking/Session/PeerDirectory.hpp"
+#include "Core/Networking/Session/PeerDirectory.hpp"
 
 using AccountEntityMap = BiMap<AccountHash, EntityHandle>;
 

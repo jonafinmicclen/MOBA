@@ -8,10 +8,12 @@
 #include "Game/Components/Match/Team.hpp"
 #include "Game/Components/Match/Spawnpoint.hpp"
 
+#include "Assets/ModelData.hpp"
+
 #include <cstdint>
 #include <tuple>
 
-struct ServerWorldTraits {
+struct ClientWorldTraits {
     enum class ArchetypeId : uint8_t {
         Champion,
         Minion,
@@ -25,15 +27,15 @@ struct ServerWorldTraits {
     using Archetypes = std::tuple<
         ArchetypeSpec<
             ArchetypeId::Champion,
-            Archetype<Transform, Path, Team, SpawnPoint>
+            Archetype<Transform, MeshId, EntityHandle>
         >,
 
         ArchetypeSpec<
             ArchetypeId::Map,
-            Archetype<Transform>
+            Archetype<Transform, MeshId>
         >
     >;
 };
 
-using ServerWorld = World<ServerWorldTraits>;
-using ServerArchetypeId = ServerWorldTraits::ArchetypeId;
+using ClientWorld = World<ClientWorldTraits>;
+using ClientArchetypeId = ClientWorldTraits::ArchetypeId;

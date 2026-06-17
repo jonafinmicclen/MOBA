@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Networking/Packets/PacketDistributor.hpp"
-#include "Networking/Core/Networker.hpp"
+#include "Core/Networking/Packets/PacketDistributor.hpp"
+#include "Core/Networking/Core/Networker.hpp"
 #include "Common/Player/AccountID.hpp"
 #include "Game/Packets/Initialiser/ClientAuthenticationPacket.hpp"
-#include "Networking/Session/PeerDirectory.hpp"
+#include "Core/Networking/Session/PeerDirectory.hpp"
 #include "Game/Packets/Initialiser/GameArgsPacket.hpp"
 #include "Server/Initialiser/GameArgs.hpp"
-#include "Adapter/NetAdapter.hpp"
+#include "Core/Adapter/NetAdapter.hpp"
 
 #include "Server/ServerWorld.hpp"
-#include "Adapter/NetAdapter.hpp"
+#include "Core/Adapter/NetAdapter.hpp"
 #include "Common/Memory/BiMap.hpp"
 #include "Game/Placeholder/PlaceholderMapDef.hpp"
 #include "Game/Packets/Gameplay/SpawnPacket.hpp"

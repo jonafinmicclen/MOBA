@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Networking/Packets/AutoRegisterPacket.hpp"
+#include "Core/Networking/Packets/AutoRegisterPacket.hpp"
 #include "Common/Debug/debug.hpp"
 #include "Game/Components/Transform.hpp"
-#include "EntityComponentSystem/World.hpp"
+#include "Core/EntityComponentSystem/World.hpp"
 
 #include <bit>
 #include <cstdint>

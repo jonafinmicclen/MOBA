@@ -1,5 +1,5 @@
 #include "Assets/ResourceManager.hpp"
-#include "Renderer/Renderer.hpp"
+#include "Client/Renderer/Renderer.hpp"
 
 ResourceManager::ResourceManager() {
 }

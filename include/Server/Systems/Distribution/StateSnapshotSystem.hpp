@@ -2,7 +2,7 @@
 
 #include "Server/ServerWorld.hpp"
 #include "Game/Packets/Gameplay/EntityStatePacket.hpp"
-#include "Adapter/NetAdapter.hpp"
+#include "Core/Adapter/NetAdapter.hpp"
 
 class StateSnapshotSystem{
 public:

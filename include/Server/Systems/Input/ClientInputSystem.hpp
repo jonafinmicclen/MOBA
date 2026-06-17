@@ -8,9 +8,9 @@
 #include "Game/Components/Transform.hpp"
 #include <cassert>
 #include "Game/Packets/Gameplay/ClientCommandPacket.hpp"
-#include "Networking/Session/PeerDirectory.hpp"
+#include "Core/Networking/Session/PeerDirectory.hpp"
 
-#include "Networking/Packets/PacketDistributor.hpp"
+#include "Core/Networking/Packets/PacketDistributor.hpp"
 #include "Common/Memory/FIFOQueue.hpp"
 
 
