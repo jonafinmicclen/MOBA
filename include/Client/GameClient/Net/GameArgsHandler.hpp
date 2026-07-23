@@ -60,6 +60,7 @@ private:
 
         Transform t;
         t.position = {0.0f,0.0f,17.5f};
+        t.scale = {2.0f, 2.0f, 1.f};
         world_.add<ClientArchetypeId::Map>(t, mesh_id);
 
 

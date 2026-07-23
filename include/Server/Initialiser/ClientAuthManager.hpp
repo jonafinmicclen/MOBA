@@ -111,17 +111,21 @@ private:
     void beginGame() {
         // This should just be emitting an event
         for (auto& player : game_args_.players) {
+            
             // Create the player entity
             SpawnPoint player_spawn = game_map_.spawn_points[player.player_idx];
             Transform spawn_transform;
             spawn_transform.position.x = player_spawn.point.x;
             spawn_transform.position.y = player_spawn.point.y;
+            spawn_transform.rotation = {0.0f, 0.0f, 0.1, 0.0f};
+            spawn_transform.rotation *= glm::quat({0.0, 0.1, 0.0f, 0.0f});
             Path p;
             MovementSpeed ms;
             ms.speed = 0.03f;
             EntityHandle handle = world_.add<ServerArchetypeId::Champion>(
                 spawn_transform, p, player.team, player_spawn, ms
             );
+
             // Emit spawn packet for clients
             SpawnCommand c;
             c.entity = player.character;
@@ -129,9 +133,6 @@ private:
             c.server_handle = handle;
             SpawnPacket pkt;
             pkt.setData(c);
-
-         
-
             networker_.sendPacket(&pkt, Channel::RELIABLECOMMANDS, {});
 
             // Register ownership to client

@@ -65,8 +65,8 @@ private:
 
     ClientWorld world_;
     
-    int window_width_ = 1920;
-    int window_height_ = 1080;
+    int window_width_ = 3840;
+    int window_height_ = 2160;
 
     bool running_ = false;
 };

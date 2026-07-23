@@ -7,8 +7,12 @@
 
 #include "Common/Math/Rect.hpp"
 
+#include "Assets/WalkableMapLoader.hpp"
+
 
 struct MapDef{
+    MapDef(WalkableMap& wa) : walkable_area(wa) {}
+    
     std::string id{};
     std::string name{};
     uint8_t n_teams{};
@@ -16,4 +20,5 @@ struct MapDef{
     std::vector<SpawnPoint> spawn_points;
     std::string model_path {};
     Rect map_boundary;
+    WalkableMap walkable_area;
 };

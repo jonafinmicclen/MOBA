@@ -13,3 +13,7 @@
 # IDE files (optional)
 *.vscode/
 *.idea/
+
+*.blend
+*.bmp
+*.tbm

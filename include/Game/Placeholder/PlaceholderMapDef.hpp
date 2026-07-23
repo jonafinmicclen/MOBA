@@ -1,10 +1,20 @@
 #pragma once
 
 #include "Game/MapDef.hpp"
+#include <fstream>
+#include "Assets/WalkableMapLoader.hpp"
 
 namespace PlaceholderMapDef {
     inline MapDef getMap() {
-        MapDef m;
+//        WalkableMap walkable_area = WalkableMapLoader::load()
+        std::ifstream file("./walkable.bin", std::ios::binary);
+
+        if (!file) {
+            throw std::runtime_error("Failed to open walkable map file");
+        }
+
+        WalkableMap walkable_area = WalkableMapLoader::load(file);
+        MapDef m = MapDef(walkable_area);
         m.id = "summoners_rift";
         m.name = "Summoners Rift";
         m.n_teams = 2;
