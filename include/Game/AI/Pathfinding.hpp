@@ -26,7 +26,8 @@ namespace Pathfinding {
         using MinQueue = std::priority_queue<QueueNode, std::vector<QueueNode>, Compare>;
 
         MinQueue open_set;
-        
+        // At this point i realise the importance to switch to int representations now than later
+
 
     }
 };

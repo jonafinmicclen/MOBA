@@ -1,13 +1,17 @@
 // WorldSpacePos.hpp
 #pragma once
 
+#include <cmath>
+
+#include "Common/Math/Fixed.hpp"
+
 
 struct WorldSpacePos {
-    float x{};
-    float y{};
+    Fixed x{};
+    Fixed y{};
 
     WorldSpacePos operator-(const WorldSpacePos& other) const {
-        return WorldSpacePos((x-other.x), (y-other.y));
+        return WorldSpacePos{(x-other.x), (y-other.y)};
     }
 
     WorldSpacePos operator/(const float& other) const {
@@ -19,6 +23,6 @@ struct WorldSpacePos {
     }
     
     float length() {
-        return sqrtf(x*x + y*y);
+        return sqrtf(x.toFloat()*x.toFloat() + y.toFloat()*y.toFloat());
     }
 };

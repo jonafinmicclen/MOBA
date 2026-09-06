@@ -108,6 +108,11 @@ public:
             return std::bit_cast<float>(bits);
         };
 
+        auto read_fixed = [&]() -> Fixed {
+            uint32_t bits = read_u32();
+            return Fixed::fromRaw(std::bit_cast<int32_t>(bits));
+        };
+
         data_ = EntityStateUpdate{};
 
         // Always present.
@@ -119,9 +124,9 @@ public:
 
         // Optional fields, in fixed order.
         if (hasField(data_.affected_fields, EntityFieldIdentifier::Transform)) {
-            data_.new_transform.position.x = read_f32();
-            data_.new_transform.position.y = read_f32();
-            data_.new_transform.position.z = read_f32();
+            data_.new_transform.position.x = read_fixed();
+            data_.new_transform.position.y = read_fixed();
+            data_.new_transform.position.z = read_fixed();
 
             data_.new_transform.rotation.w = read_f32();
             data_.new_transform.rotation.x = read_f32();
@@ -165,6 +170,11 @@ public:
             write_u32(bits);
         };
 
+        auto write_fixed = [&](Fixed value) {
+            uint32_t bits = std::bit_cast<uint32_t>(value.raw());
+            write_u32(bits);
+        };
+
         // Always present.
         write_u16(static_cast<uint16_t>(data_.handle.eid));
         write_u16(static_cast<uint16_t>(data_.handle.gen));
@@ -173,9 +183,9 @@ public:
 
         // Optional fields, in fixed order.
         if (hasField(data_.affected_fields, EntityFieldIdentifier::Transform)) {
-            write_f32(data_.new_transform.position.x);
-            write_f32(data_.new_transform.position.y);
-            write_f32(data_.new_transform.position.z);
+            write_fixed(data_.new_transform.position.x);
+            write_fixed(data_.new_transform.position.y);
+            write_fixed(data_.new_transform.position.z);
 
             write_f32(data_.new_transform.rotation.w);
             write_f32(data_.new_transform.rotation.x);

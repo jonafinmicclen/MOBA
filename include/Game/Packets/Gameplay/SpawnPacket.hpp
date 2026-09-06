@@ -69,6 +69,20 @@ public:
             return std::bit_cast<float>(bits);
         };
 
+        auto read_fixed = [&]() -> Fixed {
+            require(4);
+
+            uint32_t bits =
+                static_cast<uint32_t>(data[offset]) |
+                (static_cast<uint32_t>(data[offset + 1]) << 8) |
+                (static_cast<uint32_t>(data[offset + 2]) << 16) |
+                (static_cast<uint32_t>(data[offset + 3]) << 24);
+
+            offset += 4;
+
+            return Fixed::fromRaw(std::bit_cast<int32_t>(bits));
+        };
+
         uint16_t entity_len = read_u16();
 
         require(entity_len);
@@ -81,9 +95,9 @@ public:
         data_.server_handle.eid = static_cast<EntityID>(read_u16());
         data_.server_handle.gen = static_cast<Generation>(read_u16());
 
-        data_.position.position.x = read_f32();
-        data_.position.position.y = read_f32();
-        data_.position.position.z = read_f32();
+        data_.position.position.x = read_fixed();
+        data_.position.position.y = read_fixed();
+        data_.position.position.z = read_fixed();
 
         data_.position.rotation.w = read_f32();
         data_.position.rotation.x = read_f32();
@@ -126,6 +140,15 @@ public:
             out.push_back(static_cast<uint8_t>((bits >> 24) & 0xFF));
         };
 
+        auto write_fixed = [&](Fixed value) {
+            uint32_t bits = std::bit_cast<uint32_t>(value.raw());
+
+            out.push_back(static_cast<uint8_t>(bits & 0xFF));
+            out.push_back(static_cast<uint8_t>((bits >> 8) & 0xFF));
+            out.push_back(static_cast<uint8_t>((bits >> 16) & 0xFF));
+            out.push_back(static_cast<uint8_t>((bits >> 24) & 0xFF));
+        };
+
         write_u16(entity_len);
 
         out.insert(
@@ -137,9 +160,9 @@ public:
         write_u16(static_cast<uint16_t>(data_.server_handle.eid));
         write_u16(static_cast<uint16_t>(data_.server_handle.gen));
 
-        write_f32(data_.position.position.x);
-        write_f32(data_.position.position.y);
-        write_f32(data_.position.position.z);
+        write_fixed(data_.position.position.x);
+        write_fixed(data_.position.position.y);
+        write_fixed(data_.position.position.z);
 
         write_f32(data_.position.rotation.w);
         write_f32(data_.position.rotation.x);

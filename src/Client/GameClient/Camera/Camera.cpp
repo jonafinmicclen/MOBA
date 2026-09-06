@@ -48,8 +48,8 @@ void Camera::moveCameraPos2D(const glm::vec2 delta)
 
 void Camera::setCameraPos2D(const WorldSpacePos position) {
     auto posToTarget = target - pos;
-    pos.x = position.x;
-    pos.y = position.y;
+    pos.x = position.x.toFloat();
+    pos.y = position.y.toFloat();
     target = pos + posToTarget;
 }
 
@@ -115,8 +115,8 @@ glm::vec3 Camera::toRenderWorld(WorldSpacePos position, float height) {
     // gameplay y -> render/world z
     // height     -> render/world y
     return glm::vec3{
-        position.x,
+        position.x.toFloat(),
         height,
-        position.y
+        position.y.toFloat()
     };
 }

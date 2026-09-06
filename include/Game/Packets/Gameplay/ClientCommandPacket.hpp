@@ -15,17 +15,14 @@
 class ClientInputPacket
     : public AutoRegisterPacket<ClientInputPacket, PacketType::ClientInputPacket> {
 public:
-    static_assert(std::is_same_v<decltype(WorldSpacePos{}.x), float>,
-                  "WorldSpacePos::x must be float for ClientInputPacket serialization");
+    static_assert(std::is_same_v<decltype(WorldSpacePos{}.x), Fixed>,
+                  "WorldSpacePos::x must be Fixed for ClientInputPacket serialization");
 
-    static_assert(std::is_same_v<decltype(WorldSpacePos{}.y), float>,
-                  "WorldSpacePos::y must be float for ClientInputPacket serialization");
+    static_assert(std::is_same_v<decltype(WorldSpacePos{}.y), Fixed>,
+                  "WorldSpacePos::y must be Fixed for ClientInputPacket serialization");
 
-    static_assert(sizeof(float) == 4,
-                  "ClientInputPacket expects 32-bit floats");
-
-    static_assert(std::numeric_limits<float>::is_iec559,
-                  "ClientInputPacket expects IEEE 754 floats");
+    static_assert(sizeof(Fixed) == 4,
+                  "ClientInputPacket expects 32-bit Fixed values");
 
     PacketType getType() const override {
         return PacketType::ClientInputPacket;
@@ -51,8 +48,8 @@ public:
             (static_cast<uint32_t>(data[7]) << 8) |
             static_cast<uint32_t>(data[8]);
 
-        data_.mouse_pos.x = std::bit_cast<float>(x_bits);
-        data_.mouse_pos.y = std::bit_cast<float>(y_bits);
+        data_.mouse_pos.x = Fixed::fromRaw(std::bit_cast<int32_t>(x_bits));
+        data_.mouse_pos.y = Fixed::fromRaw(std::bit_cast<int32_t>(y_bits));
 
         data_.release = data[9] != 0;
     }
@@ -61,8 +58,8 @@ public:
         std::vector<uint8_t> d {};
         d.reserve(PacketSize);
 
-        uint32_t x_bits = std::bit_cast<uint32_t>(data_.mouse_pos.x);
-        uint32_t y_bits = std::bit_cast<uint32_t>(data_.mouse_pos.y);
+        uint32_t x_bits = std::bit_cast<uint32_t>(data_.mouse_pos.x.raw());
+        uint32_t y_bits = std::bit_cast<uint32_t>(data_.mouse_pos.y.raw());
 
         d.push_back(static_cast<uint8_t>(data_.btn));
 
