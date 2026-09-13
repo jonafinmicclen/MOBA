@@ -188,6 +188,7 @@ void GameClient::handleButtonPress(ClientButton btn, ScreenSpacePos screen_pos) 
     c.command = it->second;
     c.mouse_pos = camera_->screenToWorldOnMap(screen_pos, window_width_, window_height_);
     c.release = true;
+    c.radius = Fixed(client_config_.q_ability_target_radius);
 
     ClientInputPacket p;
     p.getData() = c;

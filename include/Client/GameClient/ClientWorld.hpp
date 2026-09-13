@@ -33,6 +33,11 @@ struct ClientWorldTraits {
         ArchetypeSpec<
             ArchetypeId::Map,
             Archetype<Transform, MeshId>
+        >,
+
+        ArchetypeSpec<
+            ArchetypeId::ProjectileHoming,
+            Archetype<Transform, MeshId>
         >
     >;
 };

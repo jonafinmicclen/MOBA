@@ -58,6 +58,7 @@ void Server::simulate() {
 
         client_input_system_->update(world_, client_state_.account_entity_map, *map_);
         path_following_system_.update(world_);
+        projectile_homing_system_.update(world_, *net_adapter_);
         debug_overlay_system_.update();
 
         const auto now = clock::now();

@@ -11,12 +11,18 @@
 // client-side only and configurable (see ClientConfig's "keybindings").
 enum class ClientCommand : uint8_t {
     MOVE,
-    SPAWN_DUMMY
+    SPAWN_DUMMY,
+    Q_ABILITY
 };
 
 struct ClientInput {
     ClientCommand command;
     WorldSpacePos mouse_pos;
     bool release;
+    // Generic per-command radius, in world units - e.g. Q_ABILITY's target
+    // search radius around mouse_pos (ClientConfig's qAbilityTargetRadius,
+    // "mouse proximity sensitivity"). Sent unconditionally like mouse_pos;
+    // commands that don't need it just ignore it.
+    Fixed radius{};
     std::optional<AccountHash> account_hash = std::nullopt;
 };

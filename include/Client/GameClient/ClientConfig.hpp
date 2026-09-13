@@ -19,6 +19,12 @@ struct ClientConfig {
     float pan_speed_divisor = 13000.0f; // larger = slower panning
     float zoom_distance = 4.58257569f;  // camera's distance from its target
 
+    // "Mouse proximity sensitivity" for targeted abilities (Q_ABILITY) -
+    // world-unit radius around the cast position an enemy must be within
+    // to be auto-targeted. Sent to the server as part of the command
+    // (ClientInput::radius); the server does the actual target search.
+    float q_ability_target_radius = 3.0f;
+
     // Button -> command, inverted from the config's command: button layout
     // (see "keybindings" in client_config.json) since input handling needs
     // to look up "what does this button do", not the other way around.
@@ -38,6 +44,7 @@ struct ClientConfig {
         config.window_height = j.at("window").at("height").get<int>();
         config.pan_speed_divisor = j.at("camera").at("panSpeedDivisor").get<float>();
         config.zoom_distance = j.at("camera").at("zoomDistance").get<float>();
+        config.q_ability_target_radius = j.value("qAbilityTargetRadius", 3.0f);
 
         if (j.contains("keybindings")) {
             for (const auto& [command_name, button_value] : j.at("keybindings").items()) {
@@ -59,6 +66,7 @@ struct ClientConfig {
         j["window"]["height"] = window_height;
         j["camera"]["panSpeedDivisor"] = pan_speed_divisor;
         j["camera"]["zoomDistance"] = zoom_distance;
+        j["qAbilityTargetRadius"] = q_ability_target_radius;
 
         nlohmann::json kb = nlohmann::json::object();
         for (const auto& [button, command] : keybindings) {

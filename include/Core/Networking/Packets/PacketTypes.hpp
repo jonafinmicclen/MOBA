@@ -11,4 +11,6 @@ enum class PacketType : uint8_t {
     SpawnPacket = 5,
     EntityStatePacket = 6,
     EntityOwnershipPacket = 7,
+    ProjectileSpawnPacket = 8,
+    DespawnPacket = 9,
 };

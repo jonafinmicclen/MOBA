@@ -52,6 +52,7 @@ inline ClientButton clientButtonFromString(const std::string& s) {
 inline ClientCommand clientCommandFromString(const std::string& s) {
     if (s == "MOVE") return ClientCommand::MOVE;
     if (s == "SPAWN_DUMMY") return ClientCommand::SPAWN_DUMMY;
+    if (s == "Q_ABILITY") return ClientCommand::Q_ABILITY;
     throw std::runtime_error("Unknown ClientCommand in config: " + s);
 }
 
@@ -82,6 +83,7 @@ inline std::string clientCommandToString(ClientCommand c) {
     switch (c) {
         case ClientCommand::MOVE:        return "MOVE";
         case ClientCommand::SPAWN_DUMMY: return "SPAWN_DUMMY";
+        case ClientCommand::Q_ABILITY:   return "Q_ABILITY";
     }
     throw std::runtime_error("Unhandled ClientCommand");
 }

@@ -8,6 +8,7 @@
 #include "Game/Components/Match/Team.hpp"
 #include "Game/Components/Match/Spawnpoint.hpp"
 #include "Game/Components/Stats/MovementSpeed.hpp"
+#include "Game/Components/Combat/HomingTarget.hpp"
 
 #include <cstdint>
 #include <tuple>
@@ -32,6 +33,11 @@ struct ServerWorldTraits {
         ArchetypeSpec<
             ArchetypeId::Map,
             Archetype<Transform>
+        >,
+
+        ArchetypeSpec<
+            ArchetypeId::ProjectileHoming,
+            Archetype<Transform, HomingTarget, MovementSpeed>
         >
     >;
 };

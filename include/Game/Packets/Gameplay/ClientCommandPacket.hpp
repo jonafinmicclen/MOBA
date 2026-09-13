@@ -52,6 +52,14 @@ public:
         data_.mouse_pos.y = Fixed::fromRaw(std::bit_cast<int32_t>(y_bits));
 
         data_.release = data[9] != 0;
+
+        uint32_t radius_bits =
+            (static_cast<uint32_t>(data[10]) << 24) |
+            (static_cast<uint32_t>(data[11]) << 16) |
+            (static_cast<uint32_t>(data[12]) << 8) |
+            static_cast<uint32_t>(data[13]);
+
+        data_.radius = Fixed::fromRaw(std::bit_cast<int32_t>(radius_bits));
     }
 
     std::vector<uint8_t> serialize_() const {
@@ -75,6 +83,12 @@ public:
 
         d.push_back(data_.release ? 1 : 0);
 
+        uint32_t radius_bits = std::bit_cast<uint32_t>(data_.radius.raw());
+        d.push_back(static_cast<uint8_t>((radius_bits >> 24) & 0xFF));
+        d.push_back(static_cast<uint8_t>((radius_bits >> 16) & 0xFF));
+        d.push_back(static_cast<uint8_t>((radius_bits >> 8) & 0xFF));
+        d.push_back(static_cast<uint8_t>(radius_bits & 0xFF));
+
         return d;
     }
 
@@ -87,7 +101,7 @@ public:
     }
 
 private:
-    static constexpr size_t PacketSize = 10;
+    static constexpr size_t PacketSize = 14;
 
     ClientInput data_;
 };

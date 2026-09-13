@@ -12,6 +12,8 @@
 #include "Game/Packets/Initialiser/EntityOwnershipPacket.hpp"
 #include "Game/Packets/Gameplay/EntityStatePacket.hpp"
 #include "Game/Packets/Gameplay/SpawnPacket.hpp"
+#include "Game/Packets/Gameplay/ProjectileSpawnPacket.hpp"
+#include "Game/Packets/Gameplay/DespawnPacket.hpp"
 
 #include "Common/Memory/BiMap.hpp"
 
@@ -100,6 +102,28 @@ private:
         client_to_server_handle_.insert(client_handle, server_handle);
     }
 
+    // Placeholder visual - there's no dedicated projectile asset yet (see
+    // AssetDatabase), so this reuses Naren's already-loaded mesh; the
+    // server scales it down (ProjectileSpawnCommand.position.scale) so it
+    // doesn't look like a second champion.
+    void projectileSpawnHandler(const ProjectileSpawnPacket& pkt, const PacketMetadata& metadata) {
+        MeshId mesh = ResourceManager::instance().getAsset("Naren")->mesh_id;
+
+        EntityHandle c_handle = world_.add<ClientArchetypeId::ProjectileHoming>(pkt.getData().position, mesh);
+        client_to_server_handle_.insert(ClientHandle{c_handle}, ServerHandle{pkt.getData().server_handle});
+    }
+
+    void despawnHandler(const DespawnPacket& pkt, const PacketMetadata& metadata) {
+        ServerHandle s_handle{pkt.getData().server_handle};
+        ClientHandle* c_handle = client_to_server_handle_.findByB(s_handle);
+        if (c_handle == nullptr) {
+            DEBUG_LOG("Despawn received for unknown server handle");
+            return;
+        }
+        world_.removeEntity(c_handle->handle);
+        client_to_server_handle_.eraseByB(s_handle);
+    }
+
     void registerHandlers(PacketDistributor& distributor) {
         // EntityOwnershipPacket
         distributor.on<EntityOwnershipPacket>(
@@ -135,6 +159,30 @@ private:
         AutoRegisterPacket<
             SpawnPacket,
             PacketType::SpawnPacket
+        >::register_pkt();
+
+        // ProjectileSpawnPacket
+        distributor.on<ProjectileSpawnPacket>(
+            PacketType::ProjectileSpawnPacket,
+            [this](const ProjectileSpawnPacket& pkt, const PacketMetadata& metadata) {
+                projectileSpawnHandler(pkt, metadata);
+            }
+        );
+        AutoRegisterPacket<
+            ProjectileSpawnPacket,
+            PacketType::ProjectileSpawnPacket
+        >::register_pkt();
+
+        // DespawnPacket
+        distributor.on<DespawnPacket>(
+            PacketType::DespawnPacket,
+            [this](const DespawnPacket& pkt, const PacketMetadata& metadata) {
+                despawnHandler(pkt, metadata);
+            }
+        );
+        AutoRegisterPacket<
+            DespawnPacket,
+            PacketType::DespawnPacket
         >::register_pkt();
     }
 };
