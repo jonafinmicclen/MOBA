@@ -34,7 +34,7 @@ public:
             return;
         }
 
-        data_.btn = static_cast<ClientInputButton>(data[0]);
+        data_.command = static_cast<ClientCommand>(data[0]);
 
         uint32_t x_bits =
             (static_cast<uint32_t>(data[1]) << 24) |
@@ -61,7 +61,7 @@ public:
         uint32_t x_bits = std::bit_cast<uint32_t>(data_.mouse_pos.x.raw());
         uint32_t y_bits = std::bit_cast<uint32_t>(data_.mouse_pos.y.raw());
 
-        d.push_back(static_cast<uint8_t>(data_.btn));
+        d.push_back(static_cast<uint8_t>(data_.command));
 
         d.push_back(static_cast<uint8_t>((x_bits >> 24) & 0xFF));
         d.push_back(static_cast<uint8_t>((x_bits >> 16) & 0xFF));

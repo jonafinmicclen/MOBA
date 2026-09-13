@@ -31,6 +31,10 @@ public:
 
     void setCamera(Camera* cam) {camera = cam; view=cam->getView(); proj=camera->getProjection((float)width/(float)height); }
 
+    // Confines the OS cursor to this window's bounds (still visible, still
+    // absolute coordinates - not relative/FPS-style mouse capture).
+    void setMouseLocked(bool locked);
+
 private:
     struct GLMesh {
         struct DrawBatch {

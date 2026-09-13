@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 #include <istream>
@@ -12,9 +13,13 @@ using Chunks = std::vector<Chunk>;
 class WalkableMap {
 public:
     WalkableMap(Chunks&& chunks, int width) :
-        chunks_(std::move(chunks)), 
+        chunks_(std::move(chunks)),
         width_(width),
-        height_(chunks.size()/width) {}
+        // Must read size off chunks_ (already moved-into above), not chunks
+        // (moved-from, size 0 after the move). Each chunk packs 8 cells, so
+        // a row is width/8 chunks - dividing by `width` alone undercounts
+        // height by 8x.
+        height_(static_cast<int>(chunks_.size()) / (width / 8)) {assert(width_ % 8 == 0);}
 
     bool at(int x, int y) const {
         /**
@@ -30,6 +35,18 @@ public:
         Chunk chunk = chunks_[chunk_x + y * chunks_per_row];
 
         return (chunk & mask) != 0;
+    }
+
+    const int size() const {
+        return width_ * height_;
+    }
+
+    const int getWidth() const {
+        return width_;
+    }
+
+    const int getHeight() const {
+        return height_;
     }
 
 private:

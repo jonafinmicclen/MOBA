@@ -5,25 +5,17 @@
 #include <optional>
 #include "Authentication/Auth.hpp"
 
-enum class ClientInputButton : uint8_t {
-    LEFT_CLICK,
-    RIGHT_CLICK,
-    Q,
-    W,
-    E,
-    R,
-    D,
-    F,
-    ITEMSLOT1,
-    ITEMSLOT2,
-    ITEMSLOT3,
-    ITEMSLOT4,
-    ITEMSLOT5,
-    ITEMSLOT6
+// Semantic action sent over the network - what the server actually acts on.
+// Distinct from ClientButton (include/Client/Input/ClientButton.hpp), the
+// physical key/mouse button that triggers it - that mapping is
+// client-side only and configurable (see ClientConfig's "keybindings").
+enum class ClientCommand : uint8_t {
+    MOVE,
+    SPAWN_DUMMY
 };
 
 struct ClientInput {
-    ClientInputButton btn;
+    ClientCommand command;
     WorldSpacePos mouse_pos;
     bool release;
     std::optional<AccountHash> account_hash = std::nullopt;

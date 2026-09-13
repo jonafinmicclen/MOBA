@@ -1,0 +1,14 @@
+{
+  "camera": {
+    "panSpeedDivisor": 11100.0,
+    "zoomDistance": 8.582574844360352
+  },
+  "keybindings": {
+    "MOVE": "RIGHT_CLICK",
+    "SPAWN_DUMMY": "T"
+  },
+  "window": {
+    "height": 1080,
+    "width": 1920
+  }
+}

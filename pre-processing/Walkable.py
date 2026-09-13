@@ -24,7 +24,7 @@ def convertGreyscaleToPackedBin(img : Image, threshold : int):
 
     Pixel intensity < threshold is interpreted as 1
     """
-    img_bytes = img.get_flattened_data()
+    img_bytes = list(img.getdata())
     w, h = img.size
 
     if not (w%8==0 and h%8==0):
@@ -41,14 +41,20 @@ def convertGreyscaleToPackedBin(img : Image, threshold : int):
     return buffer
 
 if __name__ == "__main__":
-    im = Image.open("assets/Maps/MapTemplate/nav/walkable.bmp")
+    import sys
+    import os
 
+    # Bakes a map's source walkable.bmp into the packed walkable.bin the
+    # engine actually loads at runtime (WalkableMapLoader::load), written
+    # alongside the source bmp so MapDefLoader can find it next to map.json.
+    src = sys.argv[1] if len(sys.argv) > 1 else "assets/Maps/SRTemplate/walkable.bmp"
+    dst = os.path.join(os.path.dirname(src), "walkable.bin")
+
+    im = Image.open(src)
     buffer = convertGreyscaleToPackedBin(im, 70)
 
-    proc_img =Image.frombuffer("1", (512, 512), buffer, )
-    proc_img.save("test.png")
-
-
-    with open("walkable.bin", "wb") as stream:
+    with open(dst, "wb") as stream:
         stream.write(MAGIC.encode("ascii").ljust(16, b"\0"))
         stream.write(buffer)
+
+    print(f"Wrote {dst} ({im.size[0]}x{im.size[1]})")

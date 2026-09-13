@@ -12,7 +12,7 @@
 #include "Server/ServerWorld.hpp"
 #include "Core/Adapter/NetAdapter.hpp"
 #include "Common/Memory/BiMap.hpp"
-#include "Game/Placeholder/PlaceholderMapDef.hpp"
+#include "Game/MapDef.hpp"
 #include "Game/Packets/Gameplay/SpawnPacket.hpp"
 #include "Game/Packets/Initialiser/EntityOwnershipPacket.hpp"
 #include "Server/ClientState.hpp"

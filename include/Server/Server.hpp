@@ -16,6 +16,7 @@
 #include "Common/Memory/BiMap.hpp"
 #include "Server/Systems/Input/ClientInputSystem.hpp"
 #include "Server/Systems/Movement/PathFollowingSystem.hpp"
+#include "Common/Debug/DebugOverlaySystem.hpp"
 
 #include "Game/Packets/Gameplay/SpawnPacket.hpp"
 
@@ -37,7 +38,8 @@
 #include <nlohmann/json.hpp>
 #include "Game/Control/PlayerCommand.hpp"
 
-#include "Game/Placeholder/PlaceholderMapDef.hpp"
+#include "Game/MapDefLoader.hpp"
+#include "Game/MapDatabase.hpp"
 
 #include "Server/ServerWorld.hpp"
 
@@ -62,7 +64,7 @@ private:
 
     // Game state
     ServerWorld world_;
-    MapDef map_;
+    std::optional<MapDef> map_;
     GameArgs game_args_ = GameArgs("RuntimeData/game_args.json");
 
     // Networking
@@ -76,6 +78,7 @@ private:
     std::optional<ClientInputSystem> client_input_system_;
     StateSnapshotSystem state_snapshot_system_;
     PathFollowingSystem path_following_system_;
+    DebugOverlaySystem debug_overlay_system_;
 
     bool running = false;
 };

@@ -4,6 +4,9 @@
 /CMakeFiles/
 /CMakeCache.txt
 /Makefile
+
+# launch.sh per-client sandboxes
+/.launch/
 /*.o
 /*.a
 /*.so

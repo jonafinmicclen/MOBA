@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "Common/Math/Fixed.hpp"
+#include "Common/Coordinates/Vec2.hpp"
 
 
 struct WorldSpacePos {
@@ -24,5 +25,13 @@ struct WorldSpacePos {
     
     float length() {
         return sqrtf(x.toFloat()*x.toFloat() + y.toFloat()*y.toFloat());
+    }
+
+    [[nodiscard]] Vec2 toVec2() const {
+        return Vec2{x, y};
+    }
+
+    [[nodiscard]] static WorldSpacePos fromVec2(const Vec2& v) {
+        return WorldSpacePos{v.x, v.y};
     }
 };

@@ -11,6 +11,7 @@ enum class InputEventType {
     MouseButtonDown,
     MouseButtonUp,
     MouseMotion,
+    MouseWheel,
     Exit
 };
 
@@ -19,4 +20,5 @@ struct InputEvent {
     SDL_Keycode key;
     ScreenSpacePos mousePos;
     Uint8 mouseButton;
+    float scrollDelta;
 };

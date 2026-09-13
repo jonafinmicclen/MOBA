@@ -45,7 +45,16 @@ public:
 
     // Scalar float multiply/divide - used for things like speed scaling,
     // normalisation, and lerp factors where the other operand is a plain float.
+    //
+    // WARNING: these round-trip through toFloat()/float math internally, which
+    // breaks determinism if `scalar` can differ between client and server (e.g.
+    // a locally-computed delta time). Only safe when `scalar` is identical on
+    // all machines (e.g. a compile-time constant). Prefer Fixed-only arithmetic
+    // for anything that must stay deterministic across the network.
+    [[deprecated("Fixed * float is not guaranteed deterministic - only use with scalars identical across client/server")]]
     Fixed operator*(float scalar) const { return Fixed(toFloat() * scalar); }
+
+    [[deprecated("Fixed / float is not guaranteed deterministic - only use with scalars identical across client/server")]]
     Fixed operator/(float scalar) const { return Fixed(toFloat() / scalar); }
 
     constexpr Fixed operator*(const Fixed& other) const {

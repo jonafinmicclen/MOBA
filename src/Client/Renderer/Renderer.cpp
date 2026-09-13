@@ -440,6 +440,10 @@ void Renderer::endRender() {
     SDL_GL_SwapWindow(window);
 }
 
+void Renderer::setMouseLocked(bool locked) {
+    SDL_SetWindowGrab(window, locked ? SDL_TRUE : SDL_FALSE);
+}
+
 void Renderer::testMesh(glm::vec3 translation) {
 
 }

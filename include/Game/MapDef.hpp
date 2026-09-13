@@ -9,16 +9,19 @@
 
 #include "Assets/WalkableMapLoader.hpp"
 
+#include "Common/Coordinates/TransformGrid.hpp"
+
 
 struct MapDef{
     MapDef(WalkableMap& wa) : walkable_area(wa) {}
     
-    std::string id{};
-    std::string name{};
-    uint8_t n_teams{};
+    std::string id {};
+    std::string name {};
+    uint8_t n_teams {};
     uint8_t max_players{};
     std::vector<SpawnPoint> spawn_points;
     std::string model_path {};
     Rect map_boundary;
     WalkableMap walkable_area;
+    TransformGrid map_from_world;
 };

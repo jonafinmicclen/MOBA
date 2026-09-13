@@ -6,6 +6,7 @@
 #include "Assets/ResourceManager.hpp"
 
 #include "Client/GameClient/ClientWorld.hpp"
+#include "Client/GameClient/Camera/Camera.hpp"
 
 #include "Core/Networking/Packets/PacketDistributor.hpp"
 #include "Game/Packets/Initialiser/EntityOwnershipPacket.hpp"
@@ -48,18 +49,36 @@ namespace std {
 
 class DuplicationSystem {
 public:
-    DuplicationSystem(ClientWorld& world, PacketDistributor& distributor) : world_(world) {
+    DuplicationSystem(ClientWorld& world, PacketDistributor& distributor, Camera& camera)
+        : world_(world), camera_(camera) {
         registerHandlers(distributor);
     }
 
 
 private:
     ClientWorld& world_;
+    Camera& camera_;
     BiMap<ClientHandle, ServerHandle> client_to_server_handle_;
     std::optional<ServerHandle> owned_handle_;
 
     void entityOwnershipHandler(const EntityOwnershipPacket& pkt, const PacketMetadata& metadata) {
-        owned_handle_->handle = pkt.getData().server_handle;
+        owned_handle_ = ServerHandle{pkt.getData().server_handle};
+
+        // Center the camera on the entity the moment we learn we own it -
+        // by this point its SpawnPacket has already arrived (same reliable
+        // channel, sent first by ClientAuthSystem::beginGame), so it should
+        // already exist in the client world.
+        ClientHandle* c_handle = client_to_server_handle_.findByB(*owned_handle_);
+        if (c_handle == nullptr) {
+            DEBUG_LOG("Owned entity not found in client world when centering camera");
+            return;
+        }
+        Transform* t = world_.tryGet<Transform>(c_handle->handle);
+        if (t == nullptr) {
+            DEBUG_LOG("Owned entity has no Transform when centering camera");
+            return;
+        }
+        camera_.setCameraPos2D(WorldSpacePos{t->position.x, t->position.y});
     }
     void entityStateHandler(const EntityStatePacket& pkt, const PacketMetadata& metadata) {
         auto& data = pkt.getData();

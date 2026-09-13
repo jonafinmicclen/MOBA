@@ -27,6 +27,10 @@ struct GameArgs {
     std::string map;
     std::vector<Player> players;
     std::unordered_map<std::string, std::string> player_account_map;
+    // Practice mode: pressing T on any connected client spawns a dummy
+    // Naren at the cursor's world position (see ClientInputSystem).
+    // Defaults off so normal games are unaffected.
+    bool practice_mode = false;
 
     GameArgs(const std::string path) {
         std::ifstream f(path);
@@ -38,6 +42,7 @@ struct GameArgs {
         json game_args = json::parse(f);
 
         map = game_args.at("map").get<std::string>();
+        practice_mode = game_args.value("practiceMode", false);
 
         PlayerIdx i = 0;
 

@@ -19,8 +19,8 @@ void Server::initialise() {
     loadConfig();
     DEBUG_LOG("Config loaded");
 
-    client_auth_system_.emplace(*packet_distributor_, *net_adapter_, game_args_, client_state_.account_entity_map, map_, world_, client_state_.peer_id_account_hash_map);
-    client_input_system_.emplace(*packet_distributor_, client_state_.peer_id_account_hash_map);
+    client_auth_system_.emplace(*packet_distributor_, *net_adapter_, game_args_, client_state_.account_entity_map, *map_, world_, client_state_.peer_id_account_hash_map);
+    client_input_system_.emplace(*packet_distributor_, client_state_.peer_id_account_hash_map, *net_adapter_, game_args_.practice_mode);
     net_server_->start();
 
     DEBUG_LOG("INIT DONE");
@@ -32,8 +32,7 @@ void Server::loadConfig() {
     // Just loading things into memory no world state
     // Load map
     ResourceManager::instance().loadAsset(game_args_.map);
-    MapDef map = PlaceholderMapDef::getMap();
-    map_ = map;
+    map_.emplace(MapDefLoader::load(MapDatabase::instance().Get(game_args_.map)));
 
     DEBUG_LOG("Loading players");
 
@@ -57,8 +56,9 @@ void Server::simulate() {
     while (running) {
         packet_manager_->pump();
 
-        client_input_system_->update(world_, client_state_.account_entity_map);
+        client_input_system_->update(world_, client_state_.account_entity_map, *map_);
         path_following_system_.update(world_);
+        debug_overlay_system_.update();
 
         const auto now = clock::now();
 

@@ -1,5 +1,6 @@
 {
   "map": "Summoners Rift",
+  "practiceMode": true,
   "players": [
     {
       "account": "1",
@@ -10,7 +11,7 @@
     {
       "account": "2",
       "character": "Naren",
-      "team": 0,
+      "team": 1,
       "spawnpoint": 0
     }
   ]

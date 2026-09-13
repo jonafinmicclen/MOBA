@@ -33,7 +33,11 @@ class AssetDatabase {
     private:
     AssetDatabase()
         :   defs {
-            {"Naren", {"Naren", "assets/Characters/Naren/Naren.glb"}},
+            // Naren points at a character.json (see CharacterDefLoader) -
+            // ResourceManager::loadAsset detects the .json extension and
+            // resolves the actual .glb plus rest-pose correction through
+            // it, rather than loading this path directly as a mesh.
+            {"Naren", {"Naren", "assets/Characters/Naren/character.json"}},
             {"Map", {"Map", "assets/Maps/Map.glb"}},
             {"Summoners Rift", {"Summoners Rift", "assets/Maps/SummonersRift.glb"}}
         }   {}

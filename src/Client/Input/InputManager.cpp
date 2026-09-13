@@ -81,6 +81,12 @@ void InputManager::update() {
                 dispatchEvent(event);
                 break;
 
+            case SDL_MOUSEWHEEL:
+                event.type = InputEventType::MouseWheel;
+                event.scrollDelta = static_cast<float>(sdlEvent.wheel.y);
+                dispatchEvent(event);
+                break;
+
             case SDL_QUIT:
                 event.type = InputEventType::Exit;
                 event.mousePos = currentMousePos;
